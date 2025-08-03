@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: bitnami/postgresql:latest
+    container_name: postgres
+    env_file:
+      - .env
+    volumes:
+      - /opt/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - common-infra
+networks:
+  common-infra:
+    driver: bridge
+    name: common-infra

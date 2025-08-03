@@ -2,7 +2,6 @@
 
 ## 개요
 
-> AI4REF 프로젝트는 R과 Python을 함께 사용하는 Quarto 기반 연구 프로젝트입니다.   
 > 협업 개발과 코드 디버깅을 위해 통합된 로깅 시스템을 제공합니다. 
 > 이 가이드는 개발자들이 로깅 시스템을 자신의 코드에 적용하는 방법을 설명합니다.
 
@@ -21,7 +20,7 @@
 ### 3. 설정 우선순위
 1. 현재 작업 디렉토리 폴더명 (기본값)
 2. 환경변수 PROJECT_NAME (`.env` 파일 포함)  
-3. 하드코딩된 기본값 (`ai4ref`)
+3. 하드코딩된 기본값 (`Template`)
 
 ## 로그 레벨 (5단계)
 
@@ -96,18 +95,15 @@ audit_log(
 
 ### .env 파일 설정
 ```bash
-# Python 환경 변수 설정
-PYTHONPATH=/home/ben/projects/ai4ref
-LOG_LEVEL=DEBUG
-PROJECT_NAME=ai4ref  # 선택사항
+# Python과 R 공통 환경 변수 설정
+PYTHONPATH=/home/ben/projects/project_name # 실제프로젝트 이름으로 변경필요
+LOG_LEVEL=DEBUG  # Python과 R 모두 이 값을 사용
+PROJECT_NAME=project_name  # 선택사항
 LOG_PATH=logs/dev.log  # 선택사항
 ```
 
 ### R 환경 설정
-```bash
-# R 로깅 레벨 설정
-LOG_LEVEL=DEBUG
-```
+R 로거는 `.env` 파일에서 `LOG_LEVEL`을 자동으로 읽어옵니다. 별도의 R 전용 설정은 필요하지 않습니다.
 
 ## 프로젝트별 적용 예시
 
@@ -156,9 +152,9 @@ log_info("Python 코드 블록 실행")
 
 ## PYTHONPATH 설정 및 import 경로
 
-### 현재 프로젝트 구조
+### 프로젝트 구조
 ```
-ai4ref/
+project_name/
 ├── src/
 │   ├── common/
 │   │   └── logger.py      # Python 로거
@@ -167,13 +163,30 @@ ai4ref/
 ├── scripts/
 │   ├── python/
 │   └── R/
-└── .env                   # 환경 변수 설정
+├── .env                   # 환경 변수 설정
+└── .envrc                 # direnv 설정 파일
 ```
 
 ### PYTHONPATH 설정
-본 프로젝트는 .env 파일을 통해 PYTHONPATH를 설정합니다:
+본 프로젝트는 `direnv`를 통해 PYTHONPATH를 자동으로 설정합니다:
+
+#### direnv 설치 및 설정
 ```bash
-PYTHONPATH=/home/ben/projects/ai4ref
+# 1. direnv 설치 (Ubuntu/Debian)
+sudo apt install direnv
+
+# 2. ~/.bashrc에 hook 추가
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+source ~/.bashrc
+
+# 3. 프로젝트 폴더에서 허용
+cd /path/to/quarto-website-template
+direnv allow
+```
+
+#### .envrc 파일 설정
+```bash
+export PYTHONPATH="${PWD}/src"
 ```
 
 이 설정으로 인해 `src` 디렉토리가 Python 모듈 검색 경로에 포함되어 다음과 같이 import할 수 있습니다:
@@ -185,10 +198,25 @@ from common.logger import log_info, log_debug
 from common.logger import get_logger, audit_log
 ```
 
+### 중요한 주의사항
+direnv와 .envrc를 통해 PYTHONPATH가 자동으로 설정되므로, Python 스크립트에서 다음과 같은 코드를 사용하지 마세요:
+
+```python
+# 잘못된 방법 - 하지 마세요!
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+```
+
+direnv가 이미 환경 변수를 자동으로 관리하므로, 수동으로 sys.path를 조작할 필요가 없습니다.
+
 ### VS Code 설정
-`.vscode/settings.json`에 다음 설정을 추가하여 VS Code에서 자동으로 .env 파일을 인식하도록 합니다:
+VS Code에서 Python 환경을 올바르게 인식하도록 `.vscode/settings.json`에 다음 설정을 추가합니다:
 ```json
 {
-    "python.envFile": "${workspaceFolder}/.env"
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.terminal.activateEnvironment": true
 }
 ```
+
+direnv가 설치되어 있으면 VS Code의 통합 터미널에서도 자동으로 환경 변수가 로드됩니다.
