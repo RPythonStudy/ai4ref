@@ -1,0 +1,52 @@
+{
+  "search_collections": [
+    {
+      "term": "(\"generative AI\" OR ChatGPT) AND (\"scientific writing\" OR \"academic writing\") AND (productivity OR efficiency)",
+      "collection": "AI Scientific Writing",
+      "description": "생성형 AI와 과학논문작성",
+      "retmax": 10000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    },
+    {
+      "term": "\"artificial intelligence\" AND \"medical research\" AND \"automation\"",
+      "collection": "Medical AI Research",
+      "description": "AI 의료연구 자동화",
+      "retmax": 5000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    },
+    {
+      "term": "\"large language model\" AND (\"scientific writing\" OR \"research paper\")",
+      "collection": "LLM Research Papers",
+      "description": "대형언어모델 연구논문",
+      "retmax": 8000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    },
+    {
+      "term": "\"AI-assisted\" AND (\"literature review\" OR \"systematic review\")",
+      "collection": "AI Literature Review",
+      "description": "AI 지원 문헌고찰",
+      "retmax": 6000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    },
+    {
+      "term": "\"medical AI\" AND (\"clinical decision\" OR \"diagnostic tool\")",
+      "collection": "Clinical AI Tools",
+      "description": "의료 AI 도구",
+      "retmax": 7000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    },
+    {
+      "term": "\"automated analysis\" AND (\"biomedical data\" OR \"clinical data\")",
+      "collection": "Automated Data Analysis",
+      "description": "자동화된 데이터 분석",
+      "retmax": 5000,
+      "enabled": true,
+      "created_date": "2025-08-07"
+    }
+  ]
+}

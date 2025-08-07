@@ -1,4 +1,4 @@
-# AI4REF - 의학연구 논문작성 자동화 프로젝트
+# AI4REF - 의학논문작성 자동화 프로젝트
 
 생성형 인공지능, R/Python을 활용한 의료데이터 분석 기반 의학연구 논문작성 전 과정의 생산성 향상 및 자동화 프로젝트입니다.
 
@@ -30,6 +30,14 @@ src/
 - 모듈화 설계: 개별 실행 + 연계 파이프라인 지원
 - 논문 수집: DOI→PMID→Title+Author+Year 3단계 중복체크 필수
 
+### 논문 수집 워크플로우 (필수 준수)
+1. **esearch**: 검색어로 PMID 수집
+2. **중복 체크**: DB에서 기존 PMID와 비교하여 중복 제거
+3. **efetch**: 중복되지 않는 PMID만 상세 정보 수집
+4. **최종 저장**: 수집된 논문 정보를 DB에 저장
+
+**중요**: efetch 전 반드시 DB 중복 체크 수행하여 API 호출 최소화
+
 ### 터미널 명령어
 가상환경 사용을 고려한 명령어 형식:
 ```bash
@@ -37,7 +45,8 @@ src/
 /home/ben/projects/ai4ref/.venv/bin/pip install requests
 
 # Python 스크립트 실행  
-/home/ben/projects/ai4ref/.venv/bin/python src/collector/collector.py
+# Python 스크립트 실행  
+/home/ben/projects/ai4ref/.venv/bin/python src/collector/pubmed_esearch.py
 ```
 
 ## 상세 문서
