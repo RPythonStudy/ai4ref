@@ -1,194 +1,141 @@
 # initialize_database.py - 데이터베이스 초기화 도구
 import psycopg2
+import sys
+import argparse
 from pathlib import Path
-from common.logger import log_info, log_error
-
-def show_table_structure():
-    """
-    생성된 papers 테이블의 구조를 표 형태로 보여줍니다.
-    """
-    try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="ai4ref",
-            user="postgres",
-            password="postgres"
-        )
-        cur = conn.cursor()
-        
-        # 테이블 구조 조회
-        cur.execute("""
-            SELECT 
-                column_name,
-                data_type,
-                character_maximum_length,
-                is_nullable,
-                column_default
-            FROM information_schema.columns 
-            WHERE table_name = 'papers'
-            ORDER BY ordinal_position;
-        """)
-        
-        columns = cur.fetchall()
-        
-        if not columns:
-            log_info("papers 테이블이 존재하지 않습니다")
-            return
-        
-        # 테이블 헤더
-        print("\n" + "="*80)
-        print(f"{'📋 papers 테이블 구조':^80}")
-        print("="*80)
-        print(f"{'컬럼명':<20} {'타입':<15} {'길이':<8} {'NULL':<8} {'기본값':<20}")
-        print("-"*80)
-        
-        # 테이블 데이터
-        for col in columns:
-            column_name = col[0]
-            data_type = col[1]
-            max_length = str(col[2]) if col[2] else ""
-            is_nullable = "YES" if col[3] == "YES" else "NO"
-            default_val = str(col[4])[:18] + "..." if col[4] and len(str(col[4])) > 18 else str(col[4]) if col[4] else ""
-            
-            print(f"{column_name:<20} {data_type:<15} {max_length:<8} {is_nullable:<8} {default_val:<20}")
-        
-        # 인덱스 정보
-        cur.execute("""
-            SELECT indexname, indexdef 
-            FROM pg_indexes 
-            WHERE tablename = 'papers'
-            ORDER BY indexname;
-        """)
-        
-        indexes = cur.fetchall()
-        
-        if indexes:
-            print("\n" + "-"*80)
-            print(f"{'📊 인덱스 정보':^80}")
-            print("-"*80)
-            for idx_name, idx_def in indexes:
-                print(f"• {idx_name}")
-                if "UNIQUE" in idx_def:
-                    print(f"  └ UNIQUE 제약조건")
-                print()
-        
-        print("="*80 + "\n")
-        
-        cur.close()
-        conn.close()
-        
-    except psycopg2.Error as e:
-        log_error(f"테이블 구조 조회 중 오류: {e}")
+from common.logger import log_info, log_error, log_debug
+from database.utils.analyze_database import show_table_structure, check_column_stats, show_table_columns
 
 def create_database_if_not_exists():
-    """
-    ai4ref 데이터베이스가 없으면 생성합니다.
-    """
+    """ai4ref 데이터베이스 생성"""
     try:
-        # postgres 기본 데이터베이스에 연결
-        conn = psycopg2.connect(    
-            host="localhost",
-            database="postgres",
-            user="postgres",
-            password="postgres"
-        )
+        conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres")
         conn.autocommit = True
-        
         cur = conn.cursor()
         
-        # ai4ref 데이터베이스 존재 확인
         cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'ai4ref';")
-        exists = cur.fetchone()
-        
-        if exists:
-            log_info("ai4ref 데이터베이스가 이미 존재합니다")
+        if cur.fetchone():
+            log_info("데이터베이스 ai4ref 존재함")
         else:
             cur.execute("CREATE DATABASE ai4ref;")
-            log_info("ai4ref 데이터베이스를 생성했습니다")
+            log_info("데이터베이스 ai4ref 생성완료")
         
         cur.close()
         conn.close()
         return True
-        
     except psycopg2.Error as e:
-        log_error(f"데이터베이스 처리 중 오류: {e}")
+        log_error(f"데이터베이스 생성실패: {e}")
         return False
 
-def create_papers_table():
-    """
-    papers 테이블을 생성합니다. 이미 존재하면 삭제 여부를 묻습니다.
-    """
+def drop_database_completely():
+    """ai4ref 데이터베이스 완전삭제"""
+    log_info("=== 데이터베이스 완전삭제 시작 ===")
     try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="ai4ref",
-            user="postgres", 
-            password="postgres"
-        )
-        
+        conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres")
+        conn.autocommit = True
         cur = conn.cursor()
         
-        # 테이블 존재 확인
-        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'papers');")
-        exists = cur.fetchone()[0]
-        
-        if exists:
-            log_info("papers 테이블이 이미 존재합니다")
-            try:
-                confirm = input("삭제하고 다시 생성하시겠습니까? (y/n): ")
-                if confirm.lower() != 'y':
-                    log_info("테이블 생성이 취소되었습니다")
-                    cur.close()
-                    conn.close()
-                    return True
-            except KeyboardInterrupt:
-                log_info("테이블 생성이 취소되었습니다")
-                cur.close()
-                conn.close()
-                return True
-            
-            cur.execute("DROP TABLE papers CASCADE;")
-            log_info("기존 papers 테이블을 삭제했습니다")
-        
-        # 테이블 생성
-        sql_file = Path(__file__).parent.parent / "schema" / "papers_table.sql"
-        with open(sql_file, 'r', encoding='utf-8') as f:
-            sql = f.read()
-        
-        cur.execute(sql)
-        conn.commit()
-        log_info("papers 테이블을 생성했습니다")
+        # 활성연결 종료
+        cur.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'ai4ref' AND pid <> pg_backend_pid();")
+        # 데이터베이스 삭제
+        cur.execute("DROP DATABASE IF EXISTS ai4ref;")
+        log_info("데이터베이스 ai4ref 삭제완료")
         
         cur.close()
         conn.close()
         return True
+    except psycopg2.Error as e:
+        log_error(f"데이터베이스 삭제실패: {e}")
+        return False
+
+def create_database_tables():
+    """데이터베이스 테이블 생성"""
+    # 테이블 생성 순서 (외래키 의존성 고려)
+    table_order = ['collections', 'papers', 'collection_pmid', 'unique_pmid', 'filtered_pmid', 'paper_collection']
+    
+    try:
+        with psycopg2.connect(host="localhost", database="ai4ref", user="postgres", password="postgres") as conn:
+            with conn.cursor() as cur:
+                # 기존 테이블 확인
+                existing = []
+                for table in table_order:
+                    cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s);", (table,))
+                    if cur.fetchone()[0]:
+                        existing.append(table)
+                
+                # 기존 테이블 처리
+                if existing:
+                    log_info(f"기존테이블: {', '.join(existing)}")
+                    try:
+                        confirm = input("모든 테이블을 삭제하고 다시 생성하시겠습니까? (y/n): ")
+                        if confirm.lower() != 'y':
+                            log_info("테이블생성 취소됨")
+                            return True
+                    except KeyboardInterrupt:
+                        log_info("테이블생성 취소됨")
+                        return True
+                    
+                    # 역순 삭제 (외래키 참조 고려)
+                    for table in reversed(table_order):
+                        cur.execute(f"DROP TABLE IF EXISTS {table} CASCADE;")
+                    log_info("기존테이블 삭제완료")
+                
+                # 테이블 생성
+                schema_dir = Path(__file__).parent.parent / "schema"
+                for table in table_order:
+                    sql_file = schema_dir / f"{table}.sql"
+                    if not sql_file.exists():
+                        raise FileNotFoundError(f"스키마파일 없음: {sql_file}")
+                    with open(sql_file, 'r', encoding='utf-8') as f:
+                        sql_content = f.read()
+                        log_debug(f"테이블 생성 SQL 파일: {sql_file}")
+                        log_debug(f"SQL 일부: {sql_content[:200]}")
+                        cur.execute(sql_content)
+                    log_info(f"테이블생성: {table}")
+                
+                conn.commit()
+                log_info("모든테이블 생성완료")
+        return True
         
     except psycopg2.Error as e:
-        log_error(f"테이블 처리 중 오류: {e}")
+        log_error(f"테이블생성실패: {e}")
         return False
-    except FileNotFoundError:
-        log_error("papers_table.sql 파일을 찾을 수 없습니다")
+    except FileNotFoundError as e:
+        log_error(f"파일오류: {e}")
         return False
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ai4ref 데이터베이스 초기화")
+    parser.add_argument('--reset', action='store_true', help='기존 데이터베이스 삭제 후 재생성')
+    parser.add_argument('--verbose', action='store_true', help='상세 테이블 구조 표시')
+    args = parser.parse_args()
+    
     log_info("=== 데이터베이스 초기화 시작 ===")
     
-    # 1. 데이터베이스 생성
-    success = create_database_if_not_exists()
+    # 1. 리셋 모드: 기존 DB 완전삭제
+    if args.reset:
+        if not drop_database_completely():
+            log_error("데이터베이스 삭제실패")
+            sys.exit(1)
     
-    if not success:
-        log_error("데이터베이스 초기화 실패")
-        exit(1)
+    # 2. 데이터베이스 생성
+    if not create_database_if_not_exists():
+        log_error("데이터베이스 생성실패")
+        sys.exit(1)
     
-    # 2. 테이블 생성
-    success = create_papers_table()
+    # 3. 테이블 생성
+    if not create_database_tables():
+        log_error("테이블 생성실패")
+        sys.exit(1)
     
-    if success:
-        log_info("초기화 완료: 데이터베이스와 테이블이 준비되었습니다")
-        
-        # 3. 테이블 구조 표시
+    # 4. 완료 및 상태확인
+    log_info("=== 초기화 완료 ===")
+    log_info("생성완료: collections, papers, collection_pmid, unique_pmid, filtered_pmid, paper_collection")
+    
+    show_table_columns()
+    
+    if args.verbose:
         show_table_structure()
-    else:
-        log_error("테이블 생성 실패")
+        check_column_stats("초기화완료")
     
-    log_info("=== 데이터베이스 초기화 종료 ===")
+    log_info("=== 초기화 종료 ===")
