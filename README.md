@@ -54,10 +54,10 @@ ai4ref/
 ## Wiki 문서링크
 - 이 프로젝트에서는 README.md 보다 자세한 설명이 필요한 사항들은 Wiki 문서로 작성하였습니다. 링크를 이용하시면 됩니다.
 
-- [프로젝트 개요](wiki/project-overview.md)
-- [개발환경구축](wiki/development_enviroment_setup.md)
-- [프로젝트 설치](wiki/installation.md)
-- [로깅 시스템 가이드](wiki/logging-guide.md)
+- [프로젝트 개요](wiki/project-overview)
+- [개발환경구축](wiki/development_enviroment_setup)
+- [프로젝트 설치](wiki/installation)
+- [로깅 시스템 가이드](wiki/logging-guide)
 
 
 ## 핵심 개발 지침
