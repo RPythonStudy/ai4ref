@@ -9,48 +9,48 @@
 
 
 ## 폴더 구조 설명
-
-ai4ref/
-├── src/                               # 핵심 파이썬/R 코드
-│   ├── collector/                     # 논문 수집 모듈 (PubMed, PMC, arXiv 등)
-│   │   ├── load_collections.py        # 컬렉션 검색어 로드
-│   │   ├── pubmed_esearch.py          # PubMed 검색
-│   │   ├── pmid_filter.py             # PMID 중복 필터링
-│   │   ├── pubmed_efetch.py           # 논문 메타데이터 수집
-│   │   ├── pmc_downloader.py          # PDF 다운로드
-│   │   ├── zotero_webapi.py           # Zotero 업로드
-│   │   └── zotero_webapi/             # Zotero 연동 세부 모듈
-│   ├── database/                      # DB 스키마 및 관리
-│   │   ├── schema/                    # 테이블별 SQL 스키마
-│   │   │   ├── collections.sql        # 컬렉션 테이블 스키마
-│   │   │   ├── collection_pmid.sql    # 컬렉션별 PMID 테이블
-│   │   │   ├── unique_pmid.sql        # 중복제거된 PMID 테이블
-│   │   │   ├── filtered_pmid.sql      # 최종 필터링된 PMID 테이블
-│   │   │   ├── papers.sql             # 논문 메타데이터 테이블
-│   │   │   └── paper_collection.sql   # 논문-컬렉션 관계 테이블
-│   │   └── utils/                     # DB 초기화/분석 스크립트
-│   │       ├── initialize_database.py # DB 초기화
-│   │       └── analyze_database.py    # DB 상태/통계 분석
-│   ├── preprocessor/                  # 데이터 전처리 및 필터링
-│   ├── summarizer/                    # AI 기반 논문 요약 및 텍스트 생성
-│   ├── analyzer/                      # 통계 분석, 메타분석, 데이터 해석
-│   ├── reviewer/                      # 논문 검수, 자동 수정, 품질관리
-│   ├── exporter/                      # 결과물 내보내기 (표, 그래프, 보고서 등)
-├── data/
-│   └── pdf/                           # 수집된 논문 PDF 저장 폴더
-├── config/             
-│   └── search_collections.json        # 논문 수집용 컬렉션별 검색어/필터 설정
-├── logs/                              # 실행 및 디버깅 로그 (ai4medpaper.log 등)
-├── scripts/            
-│   ├── run_full_pipeline.sh           # 전체 워크플로우 자동 실행
-│   ├── daily_collection.sh            # 일일 논문 수집 자동화
-│   ├── python/                        # 파이썬 테스트/유틸 스크립트
-│   │   ├── test_import_logger.py      # 로거 임포트 테스트
-│   │   └── test_syspath.py            # 파이썬 경로 테스트
-│   └── setup/                         
-│       └── wsl2_install_postgres.sh   # WSL2용 Postgres 설치
-└── wiki/                              # 상세 개발 문서
-
+   
+ai4ref/   
+├── src/                               # 핵심 파이썬/R 코드   
+│   ├── collector/                     # 논문 수집 모듈 (PubMed, PMC, arXiv 등)   
+│   │   ├── load_collections.py        # 컬렉션 검색어 로드   
+│   │   ├── pubmed_esearch.py          # PubMed 검색   
+│   │   ├── pmid_filter.py             # PMID 중복 필터링   
+│   │   ├── pubmed_efetch.py           # 논문 메타데이터 수집   
+│   │   ├── pmc_downloader.py          # PDF 다운로드   
+│   │   ├── zotero_webapi.py           # Zotero 업로드   
+│   │   └── zotero_webapi/             # Zotero 연동 세부 모듈   
+│   ├── database/                      # DB 스키마 및 관리   
+│   │   ├── schema/                    # 테이블별 SQL 스키마   
+│   │   │   ├── collections.sql        # 컬렉션 테이블 스키마   
+│   │   │   ├── collection_pmid.sql    # 컬렉션별 PMID 테이블   
+│   │   │   ├── unique_pmid.sql        # 중복제거된 PMID 테이블   
+│   │   │   ├── filtered_pmid.sql      # 최종 필터링된 PMID 테이블   
+│   │   │   ├── papers.sql             # 논문 메타데이터 테이블   
+│   │   │   └── paper_collection.sql   # 논문-컬렉션 관계 테이블   
+│   │   └── utils/                     # DB 초기화/분석 스크립트   
+│   │       ├── initialize_database.py # DB 초기화   
+│   │       └── analyze_database.py    # DB 상태/통계 분석   
+│   ├── preprocessor/                  # 데이터 전처리 및 필터링   
+│   ├── summarizer/                    # AI 기반 논문 요약 및 텍스트 생성   
+│   ├── analyzer/                      # 통계 분석, 메타분석, 데이터 해석   
+│   ├── reviewer/                      # 논문 검수, 자동 수정, 품질관리   
+│   ├── exporter/                      # 결과물 내보내기 (표, 그래프, 보고서 등)   
+├── data/   
+│   └── pdf/                           # 수집된 논문 PDF 저장 폴더   
+├── config/                
+│   └── search_collections.json        # 논문 수집용 컬렉션별 검색어/필터 설정   
+├── logs/                              # 실행 및 디버깅 로그 (ai4medpaper.log 등)   
+├── scripts/               
+│   ├── run_full_pipeline.sh           # 전체 워크플로우 자동 실행   
+│   ├── daily_collection.sh            # 일일 논문 수집 자동화   
+│   ├── python/                        # 파이썬 테스트/유틸 스크립트   
+│   │   ├── test_import_logger.py      # 로거 임포트 테스트   
+│   │   └── test_syspath.py            # 파이썬 경로 테스트   
+│   └── setup/                            
+│       └── wsl2_install_postgres.sh   # WSL2용 Postgres 설치   
+└── wiki/                              # 상세 개발 문서   
+   
 ## Wiki 문서링크
 - 이 프로젝트에서는 README.md 보다 자세한 설명이 필요한 사항들은 Wiki 문서로 작성하였습니다. 링크를 이용하시면 됩니다.
 
