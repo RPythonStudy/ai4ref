@@ -1,4 +1,3 @@
 [submodule "wiki"]
 	path = wiki
-	url = git@github.com:RPythonStudy/rpy-quarto-template.wiki.git
-	branch = master
+	url = git@github.com:RPythonStudy/ai4ref.wiki.git

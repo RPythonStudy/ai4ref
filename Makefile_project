@@ -1,0 +1,33 @@
+
+# Makefile_project - ai4ref 전체 파이프라인 실행용
+
+.PHONY: all init collections esearch filter efetch paper-collection download zotero analyze
+
+all: init collections esearch filter efetch paper-collection download zotero
+
+init:
+	.venv/bin/python src/database/utils/initialize_database.py
+
+collections:
+	.venv/bin/python src/collector/load_collections.py
+
+esearch:
+	.venv/bin/python src/collector/pubmed_esearch.py
+
+filter:
+	.venv/bin/python src/collector/pmid_filter.py
+
+efetch:
+	.venv/bin/python src/collector/pubmed_efetch.py
+
+paper-collection:
+	.venv/bin/python src/collector/create_paper_collection.py
+
+download:
+	.venv/bin/python src/collector/pmc_downloader.py
+
+zotero:
+	.venv/bin/python src/collector/zotero_webapi.py
+
+analyze:
+	.venv/bin/python src/database/utils/analyze_database.py all

@@ -1,32 +1,19 @@
 project:
   type: website
   output-dir: docs
-  render:
-    - "*.qmd"
-    - "!*.md"
 
 website:
-  title: "Template"
+  title: "Quarto Website Template"
   navbar:
-     left:
-      - text: "Blog"
-        href: index.qmd
-      - text: "About"
-        href: posts/about.qmd
-
-execute: 
-  freeze: auto
+    left:
+      - href: index.qmd
+        text: Home
 
 format:
   html:
     theme:
       - cosmo
-    css: styles/styles.css
-    csl: references/nuclear-medicine-and-molecular-imaging.csl
-    code-copy: true
+      - brand
+    css: styles.css
     toc: true
-    mathjax: "default"
-    link-external-newwindow: true
-    number-sections: true
-    include-after-body: utterances.html
 

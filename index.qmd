@@ -1,12 +1,168 @@
 ---
-title: "Blog"
-listing:
-  contents: posts
-  sort: "date-modified desc"
-  type: default
-  categories: true
-  sort-ui: true
-  filter-ui: true
-page-layout: full
-title-block-banner: true
+title: "논문 수집 자동화 따라하기"
+description: "Generative AI를 이용한 논문작성 생산성 향상 프로젝트 일부"
+author: "BenKorea"
+date: "2025-08-02"
+date-modified: Last-modified
+toc-depth: 4
 ---
+
+## 필요한 배경지식
+
+-   연구회 Website/Concepts 메뉴는 배경지식을 정리한 것입니다.
+-   혹시 이해하기 어려운 개념이 있다면 헤당링크를 사전학습 하시길 권장합니다. \### Git 원격저장소 clone \### R 프로젝트 renv 패키지설치 \### REST API \### JSON 자료형
+
+## 준비사항
+
+### 필수 사전준비
+
+-   R (4.5.0) 설치
+-   RStudio 설치
+-   Git 설치
+-   Zotero
+
+### 권장 사전준비
+
+-   Pubmed 계정 & API key
+
+## 따라하기
+
+### 예시프로젝트 클론
+
+-   연구회 github 원격져장소(remote repository)에 따라하기를 위한 예시 프로젝트를 올려두었습니다.
+-   클론을 위해서는 각 회원들은 자신의 로컬 PC 원하는 폴더위치(WSL2 Ubuntu 예시: \~/projects/, 윈도우예시: C:\projects)에서 git clone 명령을 실행해야 합니다.
+-   아래의 명령을 RStudio를 열고, 모든 프로젝트가 닫힌 상태에서 폴더위치를 각자의 프로젝트 폴더로 하신 뒤 아래의 명령을 Console pane/Terminal Tab에 붙여넣기를 한 후 실행하시면 됩니다.
+
+```{r git-clone, eval=FALSE, filename="RStudio/Console pane/Terminal Tab"}
+git clone https://github.com/RPythonStudy/auto-biblio.git auto-biblio
+```
+
+### 패키지 renv 설치
+
+-   원격저장소를 클론해도 패키지들을 따로 설치해야 합니다. 아래의 명령으로 renv.lock에 기록된 패키지들의 설치를 시작합니다.
+-   첫번째 옵션의 선택은 1. Activate ... 을 선택하시면 되고
+-   그다음에 renv::restore()를 다시 실행해주시면 됩니다.
+
+```{r renv-restore, eval=FALSE, filename="RStudio/Console pane/Console Tab"}
+renv::restore()
+```
+
+### index.qmd 열기
+
+-   qmd 파일의 장점은 코드청크별로 실행하기 위해 index.qmd 파일을 엽니다.
+
+### 단계별 따라하기
+
+#### setup chunk
+
+-   필요한 라이브러리들을 메모리에 일괄 로딩하는 청크입니다.
+
+```{r}
+#| label: setup
+#| include: false
+#| message: false
+#| warning: false
+
+# 라이브러리 일괄호출
+library(here)
+library(httr)
+library(jsonlite)
+
+# 사용자정의함수 호출
+invisible(lapply(
+  list.files(here::here("src", "R"), pattern = "\\.R$", full.names = TRUE),
+  source,
+  encoding = "UTF-8"
+))
+
+# 로거 초기화
+init_logger()
+
+```
+
+#### term 변수값 설정
+
+-   `term`이란 변수는 pubmed에서 지정된 변수이름은 변경불가
+-   작성법은 실제 Pubmed에서 검색하는 방법과 동일
+-   아래에서 구문검색을 위해서 ""를 사용
+-   AND OR 연사자 사용
+-   저자의 경우 chatGPT에서 작성을 요청한 것을 그대로 붙여넣기 하였음.
+
+```{r}
+#| label: term
+
+term <- '("generative AI" OR ChatGPT) AND ("scientific writing" OR "academic writing") AND (productivity OR efficiency)'
+```
+
+#### 기타 API 설정
+
+-   retmax: 검색결과 최대 개수를 설정합니다.
+-   base + endpoint를 설정합니다.
+
+```{r}
+#| label: retmax
+
+retmax <- 10  # 검색 결과 최대 개수
+esearch_url <- "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+```
+
+#### httr::GET 함수에 parameter를 지정하여 회신을 받습니다.
+
+```{r}
+#| label: GET
+esearch_res <- GET(esearch_url, query = list(
+  db = "pubmed",
+  term = term,
+  retmax = retmax,
+  retmode = "json"
+))
+```
+
+-   esearch_res를 Console Tab에 입력해보면 일반적인 텍스트가 아닌데 JSON 형식으로 된 것입니다.
+
+#### JSON 파싱
+
+-   JSON 자료형에서 원하는 정보를 얻기위해
+-   httr::content 함수를 사용하여 ???로 전환을 하고
+-   다사 fromJSON 함수를 사용하여 ???로 전환하고
+-   idlist를 변수에 할당합니다.
+
+```{r}
+#| label: idlist-parsing
+
+esearch_json <- fromJSON(content(esearch_res, "text"))
+pmid_list <- esearch_json$esearchresult$idlist
+```
+
+-   pmid_list를 Console Tab에 입력해서 개수까지 확인해 봅니다.
+
+#### EFetch - 서지정보 얻기
+
+```{r}
+#| label: efatch
+
+efetch_url <- "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+efetch_res <- GET(efetch_url, query = list(
+  db = "pubmed",
+  id = paste(pmid_list, collapse = ","),
+  retmode = "json",
+  rettype = "abstract"
+))
+efetch_json <- content(efetch_res, "text")
+
+# 결과를 파일로 저장
+output_file <- "pubmed_results.json"
+writeLines(efetch_json, output_file)
+
+```
+
+```{r}
+#| label: the-end
+#| eval: false
+```
+
+```{r}
+#| label: key
+
+api_key <- "79c1e7570052741491309181c791d8829c07"
+```

@@ -1,0 +1,28 @@
+{
+  "search_collections": [
+    {
+      "term": "((generative AND AI) OR ChatGPT OR Claude OR Gemini OR (large AND language AND model) OR LLM) AND ((EMR OR EHR OR (electronic AND medical AND record) OR (electronic AND health AND record) OR (health AND information) OR (medical AND information) OR (healthcare AND data) OR (clinical AND data)) AND ((de-identification OR deidentification OR anonymization OR pseudonymization) OR (data AND masking) OR (privacy AND protection)) AND ((unstructured AND data) OR (clinical AND text) OR (medical AND text) OR (free AND text)) AND ((structured AND data) OR normalization OR standardization OR (data AND transformation)))",
+      "collection": "ai-emr-pseudo-structuring",
+      "description": "생성형AI를 이용한 EMR 가명화 및 비정형데이터 정형화",
+      "retmax": 10,
+      "enabled": true,
+      "created_date": "2025-08-09"
+    },
+    {
+      "term": "(generative AND AI) OR ChatGPT OR Claude OR Gemini OR DeepSeek OR LLaMA OR PaLM OR (large AND language AND model) AND (manuscript AND writing) OR (research AND writing) OR (scientific AND writing) OR (academic AND writing) OR (paper AND writing) OR (article AND writing) OR (publication AND writing)",
+      "collection": "ai-auto-manuscripting",
+      "description": "생성형AI를 이용한 논문작성 자동화",
+      "retmax": 10,
+      "enabled": true,
+      "created_date": "2025-08-09"
+    },
+    {
+      "term": "((generative AND AI) OR ChatGPT OR Claude OR Gemini OR (large AND language AND model) OR LLM) AND ((unstructured AND text) OR (unstructured AND data) OR (clinical AND text) OR (medical AND text) OR (free AND text)) AND (structuring OR structurization OR normalization OR standardization OR (data AND transformation)) AND (hallucination OR (false AND information) OR (factual AND accuracy) OR (knowledge AND grounding) OR (retrieval AND augmented AND generation) OR RAG OR (fact AND checking) OR (error AND mitigation) OR (reliability AND improvement) OR (accuracy AND enhancement))",
+      "collection": "ai-hallucination-mitigation",
+      "description": "생성형AI 텍스트 정형화 시 환각현상 극복방법",
+      "retmax": 1000,
+      "enabled": false,
+      "created_date": "2025-08-09"
+    }
+  ]
+}
