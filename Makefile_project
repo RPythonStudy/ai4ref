@@ -1,33 +1,37 @@
-
-# Makefile_project - ai4ref 전체 파이프라인 실행용
-
 .PHONY: all init collections esearch filter efetch paper-collection download zotero analyze
+
+# OS에 따라 파이썬 실행 경로 설정
+ifeq ($(OS),Windows_NT)
+    PYTHON := .venv\Scripts\python.exe
+else
+    PYTHON := .venv/bin/python
+endif
 
 all: init collections esearch filter efetch paper-collection download zotero
 
 init:
-	.venv/bin/python src/database/utils/initialize_database.py
+	$(PYTHON) src/database/utils/initialize_database.py
 
 collections:
-	.venv/bin/python src/collector/load_collections.py
+	$(PYTHON) src/collector/load_collections.py
 
 esearch:
-	.venv/bin/python src/collector/pubmed_esearch.py
+	$(PYTHON) src/collector/pubmed_esearch.py
 
 filter:
-	.venv/bin/python src/collector/pmid_filter.py
+	$(PYTHON) src/collector/pmid_filter.py
 
 efetch:
-	.venv/bin/python src/collector/pubmed_efetch.py
+	$(PYTHON) src/collector/pubmed_efetch.py
 
 paper-collection:
-	.venv/bin/python src/collector/create_paper_collection.py
+	$(PYTHON) src/collector/create_paper_collection.py
 
 download:
-	.venv/bin/python src/collector/pmc_downloader.py
+	$(PYTHON) src/collector/pmc_downloader.py
 
 zotero:
-	.venv/bin/python src/collector/zotero_webapi.py
+	$(PYTHON) src/collector/zotero_webapi.py
 
 analyze:
-	.venv/bin/python src/database/utils/analyze_database.py all
+	$(PYTHON) src/database/utils/analyze_database.py all
