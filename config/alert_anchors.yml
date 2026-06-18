@@ -1,0 +1,30 @@
+# ai4ref 알림 PoC — 검색 앵커 정의
+# (RPython 연구회 "새 치료법 제안되면 Telegram 1편" 요청)
+#
+# 앵커 두 모드 (vault [[2025-08_ai4ref]] §응용 PoC):
+#   B) guideline : 진료지침 특정 권고를 앵커 (living guideline surveillance) — 우선
+#   A) topic     : 지침 없는 신흥/기술 주제 자유 토픽 — 폴백
+#
+# 함정 회피 규칙: P(대상·병태)·O(임상결과)는 좁게 고정, I/C(중재)는 열어둔다.
+#   → 지침의 "현 중재 목록"에 묶으면 확인용만 잡히고 새 치료법을 놓침.
+#   query 는 PubMed term (P·도메인·설계 게이트만; 중재어로 좁히지 말 것).
+
+anchors:
+  - id: eras_fluid_abdominal
+    mode: guideline
+    guideline: "ERAS — 주요 복부수술 수술전후 수액 관리 권고"
+    # P=주요 복부수술, 도메인=수액요법, I/C=개방(restrictive/liberal/goal-directed 등으로 좁히지 않음)
+    # O 는 LLM 게이트가 '권고 변경 근거인가'로 판정 (검색식엔 강제 안 함 → recall 보호)
+    pico:
+      P: "major abdominal surgery (high-risk adults)"
+      I: "(open — any perioperative fluid strategy)"
+      C: "(open)"
+      O: "disability-free survival, AKI, complications, recovery"
+    query: >-
+      ("Fluid Therapy"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab]
+       OR fluid regimen[tiab] OR fluid balance[tiab])
+      AND (abdominal surgery[tiab] OR colorectal surgery[tiab] OR major surgery[tiab]
+       OR "Digestive System Surgical Procedures"[Mesh])
+      AND randomized controlled trial[pt]
+    # 검증용 known-positive (이 앵커가 반드시 surface 해야 하는 ground-truth)
+    expect_pmid: "29742967"   # RELIEF (Myles, NEJM 2018)
