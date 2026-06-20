@@ -202,13 +202,35 @@ if __name__ == "__main__":
 
     mode = sys.argv[1] if len(sys.argv) > 1 else "validate"
     if mode == "validate":
-        print("[모드] 검증 (2018 윈도우, known-positive = RELIEF 29742967)\n")
-        top = run_alert(anchor, window_days=None, mindate="2018/01/01", maxdate="2018/12/31")
-        expect = anchor.get("expect_pmid")
-        if expect:
-            ok = top and top["pmid"] == expect
-            print(f"\n[검증] 기대 PMID={expect} | 선택={top['pmid'] if top else None} → "
-                  f"{'✅ PASS' if ok else '❌ FAIL'}")
-    else:  # rolling (실서비스 시뮬레이션)
+        # ── 두-검증 (시간축 분리, T = 지침 제정 시점) ───────────────────────────────
+        #    A: guideline_refs (T 이전) 를 재현하나 = 시스템 본질 성능 (recall)
+        #    B: post_guideline_landmarks (T 이후) 를 포착하나 = alert 성능
+        #    (query) AND PMID[uid] AND <윈도우> 로 포함 판정. 서로 다른 논문.
+        q = anchor["query"]
+        T = anchor.get("guideline", {}).get("date", "2012-12")
+        Ty = int(T[:4])
+
+        refs = anchor.get("guideline_refs", [])
+        print(f"=== 검증 A: 지침 근거 재현 (T={T} 이전) — guideline_refs {len(refs)}편 ===")
+        a_hit = 0
+        for pmid in refs:
+            cnt, _ = esearch(f"({q}) AND {pmid}[uid]", retmax=1,
+                             mindate="1900/01/01", maxdate=f"{Ty}/12/31")
+            ok = cnt >= 1; a_hit += ok
+            print(f"  {'✅' if ok else '❌'} {pmid}")
+        print(f"  → recall A = {a_hit}/{len(refs)}\n")
+
+        lms = anchor.get("post_guideline_landmarks", [])
+        print(f"=== 검증 B: 랜드마크 포착 (T={T} 이후) — landmarks {len(lms)}편 ===")
+        b_hit = 0
+        for pmid in lms:
+            cnt, _ = esearch(f"({q}) AND {pmid}[uid]", retmax=1,
+                             mindate=f"{Ty + 1}/01/01", maxdate="2030/12/31")
+            ok = cnt >= 1; b_hit += ok
+            print(f"  {'✅' if ok else '❌'} {pmid}")
+        print(f"  → 포착 B = {b_hit}/{len(lms)}\n")
+
+        print(f"[종합] 검증 A recall {a_hit}/{len(refs)} · 검증 B 포착 {b_hit}/{len(lms)}")
+    else:  # rolling (실서비스 시뮬레이션 — top-1 선별·발송)
         run_alert(anchor, window_days=int(sys.argv[2]) if len(sys.argv) > 2 else 30,
                   deliver=os.getenv("ALERT_DELIVER") == "1")

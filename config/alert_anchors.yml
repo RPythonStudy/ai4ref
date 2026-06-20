@@ -1,30 +1,53 @@
-# ai4ref 알림 PoC — 검색 앵커 정의
+# ai4ref 알림 PoC — 검색 앵커 정의 (두-검증 구조)
 # (RPython 연구회 "새 치료법 제안되면 Telegram 1편" 요청)
 #
-# 앵커 두 모드 (vault [[2025-08_ai4ref]] §응용 PoC):
-#   B) guideline : 진료지침 특정 권고를 앵커 (living guideline surveillance) — 우선
-#   A) topic     : 지침 없는 신흥/기술 주제 자유 토픽 — 폴백
+# 질문 유형 (7번 논문 Vella&Yao 2026, J Clin Epidemiol): intervention / diagnostic / prognostic / predictive
+#   → 유형이 설계 게이트·PICO·게이트 기준을 결정. (현재 intervention 만 구현)
 #
-# 함정 회피 규칙: P(대상·병태)·O(임상결과)는 좁게 고정, I/C(중재)는 열어둔다.
-#   → 지침의 "현 중재 목록"에 묶으면 확인용만 잡히고 새 치료법을 놓침.
-#   query 는 PubMed term (P·도메인·설계 게이트만; 중재어로 좁히지 말 것).
+# 함정 회피 규칙: P(대상·병태)는 좁게, I/C(중재)·O(결과)는 열어둔다.
+#   → O 는 색인에 안 박혀 검색식 포함 시 대량 누락(진료지침 표준 §Outcome 검색식 제외). 검색 후 스크리닝서 검증.
+#
+# 두-검증 (시간축 분리, T = 지침 제정 시점):
+#   검증 A = guideline_refs (T 이전): 시스템이 지침 근거를 재현하나 (본질 성능, recall)
+#   검증 B = post_guideline_landmarks (T 이후): alert 가 권고 바꿀 새 랜드마크를 포착하나 (alert 성능)
+#   → 둘은 *서로 다른 논문*. 시드(지침 근거)=A, 미래 랜드마크=B. (2026-06-20 Dr. Ben 설계)
 
 anchors:
   - id: eras_fluid_abdominal
+    question_type: intervention
     mode: guideline
-    guideline: "ERAS — 주요 복부수술 수술전후 수액 관리 권고"
-    # P=주요 복부수술, 도메인=수액요법, I/C=개방(restrictive/liberal/goal-directed 등으로 좁히지 않음)
-    # O 는 LLM 게이트가 '권고 변경 근거인가'로 판정 (검색식엔 강제 안 함 → recall 보호)
+    guideline:
+      name: "ERAS 2012 elective colonic surgery — 수술전후 수액 관리 권고"
+      pmid: "23099039"            # 앵커 지침 자체 (Gustafsson 2012, Clin Nutr)
+      date: "2012-12"             # T (제정 시점)
     pico:
-      P: "major abdominal surgery (high-risk adults)"
-      I: "(open — any perioperative fluid strategy)"
+      P: "major/elective colonic (abdominal) surgery"
+      I: "(open — perioperative fluid strategy: goal-directed / restrictive / liberal)"
       C: "(open)"
-      O: "disability-free survival, AKI, complications, recovery"
+      O: "complications, LOS, AKI, recovery (검색식 제외 — 스크리닝서 검증)"
+    # 검색식 v3 (검증 A 로 확정: recall 8/9, T이전 노이즈 15,988).
+    #   P·도메인(수액+혈역학 모니터링 일반어휘) 만; 설계·O 개방. 노이즈는 4단계 AI 선별이 처리.
+    #   v1(6/9)→v2(8/9·노이즈10배 cardiac output/hemodynamic 과광범위)→v3(8/9·정제) 경위는 vault 노트.
     query: >-
       ("Fluid Therapy"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab]
-       OR fluid regimen[tiab] OR fluid balance[tiab])
-      AND (abdominal surgery[tiab] OR colorectal surgery[tiab] OR major surgery[tiab]
-       OR "Digestive System Surgical Procedures"[Mesh])
-      AND randomized controlled trial[pt]
-    # 검증용 known-positive (이 앵커가 반드시 surface 해야 하는 ground-truth)
-    expect_pmid: "29742967"   # RELIEF (Myles, NEJM 2018)
+       OR fluid balance[tiab] OR fluid responsiveness[tiab] OR goal-directed[tiab]
+       OR "goal directed"[tiab] OR "intravascular volume"[tiab] OR "central venous"[tiab])
+      AND (surgery[tiab] OR surgical[tiab] OR perioperative[tiab] OR abdominal[tiab]
+       OR "Surgical Procedures, Operative"[Mesh])
+
+    # ── 검증 A (T 이전): 지침 수액 권고 근거문헌 — 시스템이 재현해야. 측정 2026-06-20 = 8/9 (89%).
+    guideline_refs:
+      - "20515521"   # 138 Varadhan/Lobo — IV fluid 메타분석
+      - "19519723"   # 140 Bundgaard — 'Liberal' vs 'restrictive' 평가
+      - "19837807"   # 141 Giglio — goal-directed 혈역학 메타
+      - "19934912"   # 142 Senagore — 복강경 colectomy GDT RCT
+      - "19602972"   # 143 Marik — arterial waveform (ICU ventilated; 간접근거 → 검색 한계로 누락, 정직한 천장)
+      - "21173294"   # 144 Futier — goal-directed vs restrictive RCT
+      - "16356220"   # 145 Pearse — central venous saturation
+      - "14739801"   # 146 Holte — epidural·intravascular volume
+      - "19302633"   # 147 Soni — GIFTASUP 합의
+
+    # ── 검증 B (T 이후): 지침 이후 practice-changing 랜드마크 — alert 가 포착해야. 측정 2026-06-20 = 2/2.
+    post_guideline_landmarks:
+      - "29742967"   # RELIEF (Myles, NEJM 2018) — near-zero 권고 뒤집음 → ERAS 2025 권고 변경 유발
+      - "24842135"   # OPTIMISE (Pearse, JAMA 2014) — goal-directed, major GI surgery
