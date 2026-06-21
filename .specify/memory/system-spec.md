@@ -87,10 +87,11 @@
    레코드로 PubMed 를 대량 검색하고 가용 본문을 내려받아 저장한다.
    - term `esearch`(retmax) → `efetch`(메타) → PMC PDF/본문 XML 다운로드.
    - **PDF·XML 저장** = 둘 다 Google Drive `Zotero_attachments`(Zotero linked-attachment
-     base, Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.{pdf,xml}`.
+     base, Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.{pdf,xml}`. 경로 =
+     `AI4REF_PDF_DIR`·`AI4REF_XML_DIR`(둘 다 기본 = Zotero_attachments).
    *입력: 수집 레코드 → 출력: 메타 + Zotero_attachments PDF·XML*
    *제약: 무료 PDF·본문 XML 은 **PMC open-access subset 한정**(외부 제약). 비OA 는
-   메타데이터만. postgres 결합 제거(DB-free) 후 재활용. 경로는 env override.*
+   메타데이터만. postgres 결합 제거(DB-free) 후 재활용.*
 
 011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
    지식 베이스로 배포한다.
