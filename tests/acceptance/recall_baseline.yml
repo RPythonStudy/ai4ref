@@ -1,0 +1,46 @@
+# 검색 recall 참값 (acceptance truth) — 헌법 XIII
+# 재작성(rewrite) 코드의 검색식·build_query 가 이 결과를 재현해야 등가로 인정.
+# 측정: 2026-06-22, `uv run python -m alert.validate_kq` (PubMed live).
+# 참값이므로 임의 갱신 금지. PICO 정련으로 점수가 오르면(예: 8/9→9/9) 그때 의도적 갱신 + 사유.
+
+measured_at: "2026-06-22"
+tool: "alert.validate_kq"
+
+key_questions:
+  - kq: "주요 복부수술 환자에서 수술전후 수액 전략의 효과"
+    question_type: intervention          # classify_qtype 제안과 일치(✅)
+    design_strictness: loose
+    guideline:
+      name: "ERAS 2012 elective colonic surgery"
+      pmid: "23099039"
+      date: "2012-12"                    # T (제정 시점)
+
+    # 파생 검색식 = build_query(pico) 스냅샷 — 재작성 build_query 등가 확인용
+    derived_query: >-
+      ("Fluid Therapy"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab] OR
+      fluid balance[tiab] OR fluid responsiveness[tiab] OR goal-directed[tiab] OR
+      "goal directed"[tiab] OR "intravascular volume"[tiab] OR "central venous"[tiab])
+      AND (surgery[tiab] OR surgical[tiab] OR perioperative[tiab] OR abdominal[tiab]
+      OR "Surgical Procedures, Operative"[Mesh])
+
+    # 검증 A — T 이전 지침 근거 재현 (relative recall)
+    validation_A:
+      expected: "8/9"
+      hit:
+        - "20515521"   # Varadhan/Lobo — IV fluid 메타분석
+        - "19519723"   # Bundgaard — liberal vs restrictive
+        - "19837807"   # Giglio — goal-directed 혈역학 메타
+        - "19934912"   # Senagore — 복강경 colectomy GDT RCT
+        - "21173294"   # Futier — goal-directed vs restrictive RCT
+        - "16356220"   # Pearse — central venous saturation
+        - "14739801"   # Holte — epidural·intravascular volume
+        - "19302633"   # Soni — GIFTASUP 합의
+      miss:
+        - "19602972"   # Marik — ICU 간접근거, 검색 한계 누락 = "정직한 천장"(의도된 miss)
+
+    # 검증 B — T 이후 practice-changing 랜드마크 포착
+    validation_B:
+      expected: "2/2"
+      hit:
+        - "29742967"   # RELIEF (Myles, NEJM 2018)
+        - "24842135"   # OPTIMISE (Pearse, JAMA 2014)
