@@ -99,19 +99,21 @@
    vs 분리는 L2 에서 확정. (헌법 X 재검토 대상)*
 
 010. **대량수집 & 본문 확보 (Bulk Collection & Full-text Acquisition)** [신규] — 주제
-   레코드로 PubMed 를 대량 검색하고 가용 본문을 내려받아 로컬에 저장한다.
+   레코드로 PubMed 를 대량 검색하고 가용 본문을 내려받아 저장한다.
    - term `esearch`(retmax) → `efetch`(메타) → PMC PDF/본문 XML 다운로드.
-   - 로컬 저장: PDF → `AI4REF_PDF_DIR`(data/pdf), XML → 로컬 경로.
-   *입력: 수집 레코드 → 출력: 메타 + 로컬 PDF·XML*
+   - **PDF 저장** = Google Drive `Zotero_attachments`(Zotero linked-attachment base,
+     Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.pdf`. XML = 별도 로컬 경로.
+   *입력: 수집 레코드 → 출력: 메타 + Zotero_attachments PDF + 로컬 XML*
    *제약: 무료 PDF·본문 XML 은 **PMC open-access subset 한정**(외부 제약). 비OA 는
-   메타데이터만. postgres 결합 제거(DB-free) 후 재활용.*
+   메타데이터만. postgres 결합 제거(DB-free) 후 재활용. 경로는 env override.*
 
 011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
    지식 베이스로 배포한다.
-   - **Zotero**: 지정 컬렉션 생성·적재(`zotero_add`, DB-free) + PDF 첨부.
+   - **Zotero**: 지정 컬렉션 생성·적재(`zotero_add`, DB-free). PDF 는 `Zotero_attachments`
+     의 파일을 가리키는 **linked 첨부**로 연결(Zotero storage import 아님 → Gdrive 단일 출처).
    - **2nd-brain**: PDF·XML 을 `second-brain/sources/00_inbox` 로 핸드오프 → brainify 가
      파싱·PARA 분류·LLM 인식(로컬/OAuth). ai4ref 는 파일만 떨군다.
-   *입력: 로컬 PDF·XML + 메타 → 출력: Zotero 컬렉션 적재 + 2nd-brain inbox 유입*
+   *입력: Zotero_attachments PDF·로컬 XML + 메타 → 출력: Zotero 컬렉션(linked) + 2nd-brain inbox 유입*
    *제약: 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지). 파일 핸드오프로 결합 최소화.*
 
 ---
