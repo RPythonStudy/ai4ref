@@ -35,6 +35,7 @@ kqs:
 
   - kq: "주요 복부수술 환자에서 수술전후 수액 전략의 효과"
     question_type: intervention
+    design_strictness: loose     # strict = 기대설계(RCT) 수준 요구 / loose = recall 우선(기본)
     pico:
       P:                              # 대상: 주요 복부(대장) 수술 — OR 블록
         - surgery[tiab]

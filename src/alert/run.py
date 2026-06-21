@@ -109,13 +109,19 @@ def run(demo: bool = False, collect_only: bool = False,
     state_path = (features.get("state", {}) or {}).get("path", "state/alerted.jsonl")
     seen = SeenStore(state_path)
 
-    # KQ → 현행 지침 라벨 + C·O 필터 기준 (게이트에 전달)
-    gl_map, co_map = {}, {}
+    # KQ → 게이트 컨텍스트 (지침 라벨 · C·O 필터 · 유형 · 엄격도)
+    ctx_map = {}
     for kq in _load_kqs():
         g = kq.get("guideline", {})
-        gl_map[kq["kq"]] = f"{g.get('name','')} ({g.get('date','')})".strip()
         pico = kq.get("pico", {})
-        co_map[kq["kq"]] = (pico.get("C", ""), pico.get("O", ""))
+        ctx_map[kq["kq"]] = {
+            "kq": kq["kq"],
+            "guideline": f"{g.get('name','')} ({g.get('date','')})".strip(),
+            "comparison": pico.get("C", ""),
+            "outcome": pico.get("O", ""),
+            "question_type": kq.get("question_type", ""),
+            "strictness": kq.get("design_strictness", "loose"),
+        }
 
     candidates = _demo_candidates() if demo else _collect_candidates(features, reldate=reldate, limit=limit)
 
@@ -124,10 +130,9 @@ def run(demo: bool = False, collect_only: bool = False,
         if seen.is_seen(c.key):
             skipped += 1
             continue
-        C, O = co_map.get(c.kq, ("", ""))
         verdict = judge(
             {"title": c.title, "abstract": c.abstract},
-            {"kq": c.kq, "guideline": gl_map.get(c.kq, ""), "comparison": C, "outcome": O},
+            ctx_map.get(c.kq, {"kq": c.kq}),
             backend=backend,
         )
         if not verdict.get("is_landmark"):

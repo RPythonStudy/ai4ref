@@ -6,6 +6,11 @@ backend:
   claude_cli = 로컬 Claude Code · OAuth 구독 · 추가비용 0   ← 운영 권장
   api        = Anthropic API · 클라우드 · 토큰 과금(예정)
 
+2단계 판정:
+  ① 관련성 — KQ 의 대상(P) AND 중재(I) 를 *둘 다* 다루는가 (한쪽만 = false)
+  ② 랜드마크 — 지침과 다른 결론·프로토콜의 practice-changing 인가
+              (strict = 기대 설계 수준 요구 / loose = recall 편향)
+
 judge() -> {"relevant": bool, "is_landmark": bool, "reason": str}
 """
 import json
@@ -13,17 +18,35 @@ import subprocess
 
 from common.features import log
 
-PROMPT = """너는 진료지침 감시 보조다. 아래 논문이 현행 지침과 *다른 결론/프로토콜*을 제시하는 '랜드마크'인지 판정하라.
-KQ: {kq}
-현행 지침: {guideline}
-대조(C, 참고): {comparison}
-주요 결과(O, 이 결과를 보고하는지 확인): {outcome}
-제목: {title}
-초록: {abstract}
+# question_type → 기대 연구설계 (게이트가 strict 일 때 요구하는 근거 수준)
+DESIGN_LABEL = {
+    "intervention": "무작위 대조시험(RCT)",
+    "diagnostic":   "진단 정확도 연구",
+    "prognostic":   "코호트(예후) 연구",
+    "predictive":   "치료반응 예측 연구(RCT 서브그룹/바이오마커)",
+}
 
-판정 원칙(중요 · recall 편향): 감시에서 가장 비싼 오류는 '놓침'이다.
-- 지침을 바꿀 *가능성*이 보이면 불확실해도 is_landmark=true 로 포함하라(경계선 = 포함).
-- 명백히 무관하거나(relevant=false) 지침과 같은 결론을 재확인할 뿐이면 is_landmark=false.
+PROMPT = """너는 진료지침 감시 보조다. 아래 논문을 2단계로 엄격히 판정하라.
+
+[KQ] {kq}
+  · 대조(C): {comparison}
+  · 주요 결과(O): {outcome}
+[현행 지침] {guideline}
+[기대 연구설계] {design}
+[엄격도] {strictness}
+
+[논문]
+  제목: {title}
+  초록: {abstract}
+
+판정 단계:
+① 관련성 — 이 논문이 KQ 의 **대상(P)과 중재(I)를 둘 다** 직접 다루는가?
+   · 한쪽만 맞으면 relevant=false. (대상은 맞으나 다른 중재 / 중재는 맞으나 다른 대상)
+   · 예: KQ='복부수술의 수액전략' 인데 논문이 '신장이식의 수액전략'(대상 불일치) 이거나
+        '복부수술의 로봇 vs 복강경'(중재 불일치) 이면 relevant=false.
+② 랜드마크 — (relevant 일 때만) 현행 지침과 *다른 결론·프로토콜* 을 제시하는 practice-changing 인가?
+   · strict: 기대 설계({design}) 수준의 근거여야 is_landmark=true. 그 외 false.
+   · loose: 설계 무관, 경계선이면 포함 (recall 편향 — 놓침이 가장 비싼 오류).
 
 JSON 으로만 답하라:
 {{"relevant": true/false, "is_landmark": true/false, "reason": "한 줄 근거(한국어)"}}"""
@@ -47,16 +70,16 @@ def _stub(paper, kq) -> dict:
 
 
 def _claude_cli(paper, kq, model: str = "haiku") -> dict:
-    """로컬 Claude Code(OAuth)에 위임. 추가 API 비용 없음.
-
-    분류는 Haiku 로 충분(빠르고 rate 절약). 출력 래퍼:
-    {"type":"result", "is_error":bool, "result":"<답변 문자열=우리 JSON>"}.
-    """
+    """로컬 Claude Code(OAuth)에 위임. 추가 API 비용 없음. 분류는 Haiku 로 충분."""
+    qtype = kq.get("question_type", "")
+    design = DESIGN_LABEL.get(qtype, "해당 유형의 적정 연구설계")
     prompt = PROMPT.format(
         kq=kq.get("kq", ""),
-        guideline=kq.get("guideline", ""),
         comparison=kq.get("comparison", "") or "(개방)",
         outcome=kq.get("outcome", ""),
+        guideline=kq.get("guideline", ""),
+        design=design,
+        strictness=kq.get("strictness", "loose"),
         title=paper.get("title", ""),
         abstract=(paper.get("abstract", "") or "")[:3000],
     )
