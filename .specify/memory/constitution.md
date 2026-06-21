@@ -1,18 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (2026-06-22 개정: L1 = README → system-spec.md 분리)
-- Ratified: 2026-06-21
-- Modified principles:
-  - XI. Collocated Spec — L1 = `.specify/memory/system-spec.md`(README 는 사용자용 분리,
-    cortex 의 L1=README 에서 의도적 분기, 프롬프트 최적화)
-  - (1.1.0) X. Config 단순화 — 감시+수집 2트랙(L1 §009~011): collector DB-free 부활,
-    수집 주제 config 추가(통합/분리 L2 확정)
-- Added sections:
-  - Core Principles I~X (Part A 임상 감시 도메인 — 불변)
-  - Core Principles XI~XVIII (Part B 엔지니어링 규율 — cortex-kit 계승)
-  - Operational Standards
-  - Development Workflow
-  - Governance
+- Version change: 1.3.0 → 1.3.1 (2026-06-22 정정: XI 인터페이스 중복 모순 해소, I·XX 중복 cross-ref)
+- Ratified: 2026-06-21 (v1.0.0)
+- Modified principles (v1.3.1 patch):
+  - XI. Collocated Spec — L3 불릿의 "공개 인터페이스 표" 제거(새 문단의 docstring 일원화와 모순 해소)
+  - I. 결정론 Backbone — pt 문장을 원칙 IV cross-ref 로 축약(중복 제거)
+  - XX. (구 "API 회귀 대책") — 프롬프트 회귀 룰을 원칙 XIII 참값 참조로 정리, 제목 명확화
+- v1.3.0 (이전 개정): I(pt LLM 위임 명시)·XI(코드300/명세200 이원화) 수정 + XIX(LLM 테스트 캐싱)·XX(회복탄력성) 추가
 - 출처: cortex-kit 헌법 V~XII·부가 흡수 + ai4ref 도메인 불변 결정 1~10 (초안 docs/constitution-draft.md·구 HANDOFF.md 는 흡수 후 삭제 — 이 문서가 정본)
 - Templates requiring updates:
   - .specify/templates/plan-template.md ✅ — "Constitution Check" 게이트가 헌법을 동적 참조(범용), 하드코딩 없음
@@ -29,6 +23,8 @@ Sync Impact Report
 ### I. 결정론 Backbone + 최소 LLM
 검색·날짜필터·dedup 은 결정론(재현 가능) 코드로 처리한다. LLM 은 관련성·랜드마크
 판정에만 쓴다. 기계가 결정론으로 수행 가능한 작업을 LLM 에 위임해서는 안 된다.
+단, 색인 지연·품질로 결정론 필터링 시 누락되는 항목(예: 연구 설계 pt)은 게이트의
+의미판단 영역으로 둔다 (상세 = 원칙 IV).
 **근거**: 재현성·디버깅 가능성 확보, LLM 비결정성의 영향 범위 최소화.
 
 ### II. PICO = OR-블록
@@ -83,7 +79,7 @@ L1 §009) + `features.yml`(토글)로 한정한다. 수집 주제를 `key_questi
 DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 **근거**: 설정 표면적 최소화·단일 형식. 감시·수집 2트랙(L1) 반영.
 
-### XI. Collocated Spec (3계층 명세 — cortex-kit 차용)
+### XI. Collocated Spec (3계층 명세 — 명세-코드 동거)
 명세는 3계층으로 둔다:
 - **L1 (프로젝트)** = `.specify/memory/system-spec.md`(기능 카탈로그 001~ : 입력/출력/제약,
   agent 컨텍스트 주입 정본) + 횡단 설계 `docs/*.md`. 루트 `README.md` 는 L1 명세가 아니라
@@ -93,13 +89,13 @@ DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 - **L2 (피처)** = `specs/<NNN-feature>/`(Spec Kit 산출물: spec·plan·data-model·
   research·tasks·analysis). `/speckit-*` 명령으로 생성·관리한다.
 - **L3 (컴포넌트)** = 코드 옆 동거 `<모듈>_spec.md`(예: `llm_gate.py` ↔
-  `llm_gate_spec.md`). 헤더에 모듈·테스트·L2 참조(FR 번호)와 공개 인터페이스 표를
-  포함한다. Spec Kit 이 자동생성하지 않는 수작업 규율이며, 코드와 동일 커밋에
+  `llm_gate_spec.md`). 헤더에 모듈·테스트·L2 참조(FR 번호)를 둔다. 공개 인터페이스
+  상세(함수 시그니처 등)는 명세에 표로 두지 않고 코드 docstring·type hint 로 일원화한다
+  (아래 문단). Spec Kit 이 자동생성하지 않는 수작업 규율이며, 코드와 동일 커밋에
   동기화해야 한다(원칙 XVI).
 
-각 파일은 단일 관심사만 담고 200줄을 초과해서는 안 된다. 예외 없음 — 기존 alert
-로직도 L3 명세-우선으로 새로 작성한다.
-**근거**: 명세-코드 동거로 드리프트 차단, 1인 개발 인지부하 관리.
+코드 파일(*.py)은 단일 관심사만 담고 최대 300줄을 초과해서는 안 되며, L3 명세 파일(*_spec.md)은 최대 200줄을 초과해서는 안 된다. 명세 파일에는 비즈니스 규칙과 L2 피처 매핑(FR 번호) 및 테스트 인수 기준만을 기술하고, 함수 시그니처 등의 상세 API 인터페이스는 코드 내 Docstring 및 Type Hint로 일원화하여 중복을 방지한다.
+**근거**: 명세-코드 동거로 드리프트 차단, 1인 개발 인지부하 관리 및 중복성 최소화.
 
 ### XII. Procedural Clarity (절차적 명확성)
 절차적/함수형 파이프라인을 지향한다. 과도한 Class 상속·Decorator 추상화를 금지한다.
@@ -141,6 +137,14 @@ DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 영어 원어를 그대로 쓰고, 한글 문장 내 영어 혼용을 표준으로 한다.
 **근거**: 1인 개발자(Dr. Ben)의 가독성·전문성 동시 확보.
 
+### XIX. LLM 게이트 테스트 캐싱 (LLM Test Caching)
+로컬 개발 및 테스트 실행 시, 동일한 논문 초록과 프롬프트에 대한 LLM 판정 결과는 로컬 캐시(예: `state/llm_cache.json`)에 저장하여 재사용한다. 이는 1인 개발 루프 속도를 보장하고 불필요한 비용을 최소화하기 위함이다. 단, 최종 배포 검증 시에는 캐시 없이 실행한다.
+**근거**: 로컬 개발 피드백 속도 극대화.
+
+### XX. API 회복탄력성 & 회귀 가드 (Resilience & Regression Guard)
+PubMed 및 Zotero 등 외부 연동 API 부전 시 1차 실패가 시스템 전체 크론 작업을 중단시키지 않도록 지수 백오프(Exponential Backoff)를 적용하고 Fail-soft 처리한다. 또한, 프롬프트 문구의 수정은 원칙 XIII 의 acceptance 참값(`tests/acceptance/*`)을 재현해 성능 저하(Regression)가 없음이 입증된 경우에만 허용한다.
+**근거**: 파이프라인의 회복 탄력성 확보 및 선별 품질 제어.
+
 ## Operational Standards
 
 - **런타임 데이터 격리**: 소스와 실행 데이터(`state/` seen-set jsonl)를 분리하고
@@ -171,4 +175,4 @@ DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 - 헌법 수정 절차: 수정 제안 → 영향 분석(Sync Impact Report) → 의존 템플릿 갱신 →
   버전 범프 → 비준.
 
-**Version**: 1.2.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-22
+**Version**: 1.3.1 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-22
