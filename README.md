@@ -68,7 +68,6 @@ uv run python -m alert.validate_kq         # 두-검증 자동채점 (A 8/9 · B
 
 - [L1 시스템 명세](.specify/memory/system-spec.md) — 기능 카탈로그(입력/출력/제약)
 - [설계 헌법](.specify/memory/constitution.md) — 불변 원칙
-- [HANDOFF](HANDOFF.md) — 현재 상태·다음 할 일
 
 ## 라이선스
 
