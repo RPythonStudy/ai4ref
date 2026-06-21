@@ -101,24 +101,26 @@
 010. **대량수집 & 본문 확보 (Bulk Collection & Full-text Acquisition)** [신규] — 주제
    레코드로 PubMed 를 대량 검색하고 가용 본문을 내려받아 저장한다.
    - term `esearch`(retmax) → `efetch`(메타) → PMC PDF/본문 XML 다운로드.
-   - **PDF 저장** = Google Drive `Zotero_attachments`(Zotero linked-attachment base,
-     Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.pdf`. XML = 별도 로컬 경로.
-   *입력: 수집 레코드 → 출력: 메타 + Zotero_attachments PDF + 로컬 XML*
+   - **PDF·XML 저장** = 둘 다 Google Drive `Zotero_attachments`(Zotero linked-attachment
+     base, Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.{pdf,xml}`.
+   *입력: 수집 레코드 → 출력: 메타 + Zotero_attachments PDF·XML*
    *제약: 무료 PDF·본문 XML 은 **PMC open-access subset 한정**(외부 제약). 비OA 는
    메타데이터만. postgres 결합 제거(DB-free) 후 재활용. 경로는 env override.*
 
 011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
    지식 베이스로 배포한다.
    - **Zotero**: ai4ref 가 Web API(`zotero_add`, DB-free)로 ① 서지 레코드 생성·지정 컬렉션
-     적재 ② PDF 를 `Zotero_attachments` 에 Zotfile 명명(`<저자> 등 - <연도> - <제목>.pdf`)으로
-     배치까지 자동. **linked_file(linkMode=2) 연결은 Web API 로 생성 불가** → 로컬 Zotero
-     클라이언트의 Zotfile "Attach Link to File"(수동/배치) 한 단계로 완성. 기존 275건과 동일
-     모델(Gdrive 단일 출처·풀텍스트 색인).
-   - **2nd-brain**: 사본을 만들지 않는다. `Zotero_attachments` 의 PDF·로컬 XML 을
+     적재 ② PDF·XML 을 `Zotero_attachments` 에 Zotfile 명명(`<저자> 등 - <연도> - <제목>.{pdf,xml}`)
+     으로 배치까지 자동. **linked_file(linkMode=2) 연결은 Web API 로 생성 불가** → 로컬 Zotero
+     클라이언트의 "Attach Link to File"(Zotfile, 수동/배치) 한 단계로 PDF·XML 둘 다 동일 서지
+     항목에 다중 첨부. 기존 PDF 모델(Gdrive 단일 출처·풀텍스트 색인)과 동일, XML 은 동일
+     linked_file(contentType `application/xml`). (Zotfile 자동 rename 은 기본 PDF 만 → XML 은
+     "Attach Link to File" 또는 Zotfile 확장자 추가 설정.)
+   - **2nd-brain**: 사본을 만들지 않는다. `Zotero_attachments` 의 PDF·XML 을
      **직접 참조**하는 포인터(파일 경로·메타 manifest/stub 노트)를 2nd-brain 에 전달 →
      brainify 가 해당 파일을 in-place 로 파싱·PARA 분류·LLM 인식(로컬/OAuth).
-   *입력: Zotero_attachments PDF·로컬 XML 경로 + 메타 → 출력: Zotero 서지+컬렉션(+Zotfile
-   linked) + 2nd-brain 참조 노트(in-place)*
+   *입력: Zotero_attachments PDF·XML 경로 + 메타 → 출력: Zotero 서지+컬렉션(+linked PDF·XML)
+   + 2nd-brain 참조 노트(in-place)*
    *제약: 사본 금지(단일 출처 = Gdrive). linked_file 최종 연결 = 클라이언트 Zotfile 단계
    (Web API 한계, 비headless). 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지).*
 
