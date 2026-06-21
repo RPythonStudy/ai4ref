@@ -4,7 +4,7 @@ from pathlib import Path
 from common.database import get_db_connection
 
 def load_search_collections():
-    cfg_path = Path("config/kq_anchors.yml")
+    cfg_path = Path("config/kq_pico_collection.yml")
     with open(cfg_path, "r", encoding="utf-8") as f:
         collections = yaml.safe_load(f)["kqs"]
     conn = get_db_connection()

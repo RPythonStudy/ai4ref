@@ -1,17 +1,17 @@
-# config/kq_anchors.yml
+# config/kq_pico_collection.yml
 # ═══════════════════════════════════════════════════════════════════════════════
-# KQ 앵커 레코드 — 단일 정본 (진료지침 감시 + 일반 수집 통합)
-#   KQ(Key Question)가 1급 앵커. 각 KQ가 검색식·검증셋을 매단다.
+# KQ-PICO 컬렉션 — 단일 정본 (진료지침 감시 + 일반 수집 통합)
+#   KQ(Key Question) 중심 레코드. 각 KQ가 검색식·검증셋·Zotero 컬렉션을 정의한다.
 #   guideline 있으면 = 감시 KQ(두-검증), 없으면 = 일반 수집(collector 전용).
 #   (구 alert_anchors.yml·search_collections.json 통합 2026-06-21)
 #
 # 필드:
-#   kq                        KQ 주제 (앵커)
+#   kq                        KQ 주제 (이 레코드의 중심)
 #   question_type             intervention | diagnostic | prognostic | predictive | general
 #                             0단계: 사용자가 결정형으로 입력 = 권위 (classify_qtype.py 는 보조 제안)
 #   pico {P,I,C,O}            함정회피: P 좁게 · I/C/O 개방 (O 색인누락 → 스크리닝서 판정)
 #   term                      검색식 (PubMed)
-#   guideline {name,pmid,date=T}   감시 앵커 지침 (date = T, 제정 시점)
+#   guideline {name,pmid,date=T}   감시 대상 지침 (date = T, 제정 시점)
 #   guideline_refs            검증 A: T 이전 지침 근거문헌 (재현해야 = recall)
 #   post_guideline_landmarks  검증 B: T 이후 practice-changing 랜드마크 (포착해야)
 #   collection / retmax       collector(수집)용

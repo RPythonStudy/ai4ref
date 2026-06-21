@@ -40,8 +40,8 @@ def _demo_candidates() -> list:
 
 
 def _load_kqs() -> list:
-    """kq_anchors.yml 에서 감시 대상 KQ(enabled + term + guideline)만."""
-    path = project_root() / "config" / "kq_anchors.yml"
+    """kq_pico_collection.yml 에서 감시 대상 KQ(enabled + term + guideline)만."""
+    path = project_root() / "config" / "kq_pico_collection.yml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     out = []
     for r in data.get("kqs", []):
@@ -54,7 +54,7 @@ def _collect_candidates(features, reldate: int = 30, limit: int = None) -> list:
     """PubMed 증분 검색 → efetch(제목·초록) → 후보 LandmarkItem 목록."""
     kqs = _load_kqs()
     if not kqs:
-        log.warning("[collect] 감시 KQ 없음 (kq_anchors.yml: enabled+term+guideline 필요)")
+        log.warning("[collect] 감시 KQ 없음 (kq_pico_collection.yml: enabled+term+guideline 필요)")
         return []
     items = []
     for kq in kqs:
