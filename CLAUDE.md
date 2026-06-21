@@ -27,3 +27,8 @@ ai4ref = **진료지침 기반 신규문헌 감시(alert)** + 문헌 대량수�
 ## 다음
 
 OpenClaw cron(자율 발화) → KQ 추출 add-on(Spec Kit) → audit 정리. (HANDOFF.md §다음)
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
