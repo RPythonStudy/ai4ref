@@ -41,7 +41,7 @@
 ## Quickstart
 
 ### 요구사항
-- Python 3.11+ (현재 `.venv`; 재작성 후 `uv`)
+- Python 3.11+ 와 [uv](https://docs.astral.sh/uv/) (패키지·가상환경 관리)
 - `.env` 시크릿: `ZOTERO_API_KEY`·`ZOTERO_USER_ID`(write 권한), `ENTREZ_EMAIL`,
   `PUBMED_API_KEY`(선택), Telegram 토큰(알림 사용 시). `.env.example` 참고.
 - 게이트(라이브 판정)용 로컬 [Claude Code](https://claude.com/claude-code) CLI(`claude`, OAuth).
@@ -50,16 +50,16 @@
 ```bash
 git clone https://github.com/RPythonStudy/ai4ref.git
 cd ai4ref
-python -m venv .venv && .venv/bin/pip install -r requirements.txt
+uv sync                # .venv 생성 + 의존성 설치 (uv.lock 재현)
 cp .env.example .env   # 키 채우기
 ```
 
 ### 실행 (감시 트랙)
 ```bash
-.venv/bin/python src/alert/run.py --demo          # 배관 검증(가짜 랜드마크)
-.venv/bin/python src/alert/run.py --collect-only  # 실 PubMed 후보만(전송 안 함)
-.venv/bin/python src/alert/run.py                 # 전체(reldate 30, 게이트 라이브 → 알림)
-.venv/bin/python src/alert/validate_kq.py         # 두-검증 자동채점 (A 8/9 · B 2/2)
+uv run python -m alert.run --demo          # 배관 검증(가짜 랜드마크)
+uv run python -m alert.run --collect-only  # 실 PubMed 후보만(전송 안 함)
+uv run python -m alert.run                 # 전체(reldate 30, 게이트 라이브 → 알림)
+uv run python -m alert.validate_kq         # 두-검증 자동채점 (A 8/9 · B 2/2)
 ```
 - 게이트는 `features.yml` 의 `llm_backend: claude_cli` 일 때 라이브 판정(추가비용 0).
 - 수집 트랙(009~011)은 개발 중 — 사용법은 구현 후 추가.

@@ -1,0 +1,36 @@
+[project]
+name = "ai4ref"
+version = "0.1.0"
+description = "진료지침 기반 신규문헌 감시(alert) + 주제 기반 대량수집(collect)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=1.1",
+    "pyyaml>=6.0",
+    "pyzotero>=1.6",
+    "biopython>=1.85",   # E-utilities (esearch/efetch) — 재작성 시 requests 로 대체 검토
+    "aiohttp>=3.12",     # PMC 비동기 다운로드
+    "aiofiles>=24.1",
+    "psycopg2-binary>=2.9",  # collector(legacy) — DB-free 재작성 후 제거 예정
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# src 레이아웃: src/<pkg> 를 top-level 패키지(alert·common·collector·notify·database)로 매핑.
+# 코드의 절대 import(`from common...`, `from notify...`)가 그대로 해석됨.
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/alert",
+    "src/common",
+    "src/collector",
+    "src/notify",
+    "src/database",
+]

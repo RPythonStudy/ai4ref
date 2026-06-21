@@ -47,7 +47,7 @@
 - ⚠️ `src/collector/*` 는 **전량 DISCARD 아님** — esearch·efetch·pmc_downloader·zotero_add 는 수집 트랙으로 **DB-free 재작성하여 부활**(위 REBUILD). postgres 결합 코드(get_db_connection·collection_pmid/papers 테이블 워크플로)만 폐기.
 - `config/legacy_collections.yml`: term-based 수집 주제 = 수집 트랙(L1 §009)으로 **재정의**. `key_questions.yml` 통합(type 필드) vs 별도 config 는 L2 확정 (헌법 X).
 - 오케스트레이션: `Makefile`·`Makefile_project`·`scripts/`
-- 패키징: `requirements.txt`(flat freeze) → **`pyproject.toml`(uv·src layout·slim deps: pyyaml·python-dotenv·requests·pyzotero)**
+- 패키징: ✅ **완료(2026-06-22, lift-and-shift)** — `requirements.txt` 삭제 → `pyproject.toml`(uv·src 레이아웃·hatchling) + `uv.lock`. 현재 deps = 현행 유지(biopython·aiohttp·psycopg2-binary 포함). 실행 = `uv run python -m alert.run`. **slim 트림(psycopg2 제거·biopython→requests 등)은 DB-free 재작성 때.**
 
 ### Spec Kit 실행 순서 (fresh ai4ref 세션에서)
 ```
