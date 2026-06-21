@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))   # src/ 를 i
 from common.features import load_features, is_enabled, log, project_root   # noqa: E402
 from common.state import SeenStore                                  # noqa: E402
 from common.pubmed import esearch, efetch_meta                      # noqa: E402
+from common.query import build_query                                # noqa: E402
 from notify.base import LandmarkItem                                # noqa: E402
 from notify.registry import build_sinks, fan_out                    # noqa: E402
 from alert.llm_gate import judge                                    # noqa: E402
@@ -45,7 +46,7 @@ def _load_kqs() -> list:
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     out = []
     for r in data.get("kqs", []):
-        if r.get("enabled") and r.get("query") and r.get("guideline"):
+        if r.get("enabled") and r.get("pico") and r.get("guideline"):
             out.append(r)
     return out
 
@@ -58,7 +59,7 @@ def _collect_candidates(features, reldate: int = 30, limit: int = None) -> list:
         return []
     items = []
     for kq in kqs:
-        term, T = kq["query"], kq["guideline"]["date"]   # 정련된 검색식 (런타임 사용)
+        term, T = build_query(kq["pico"]), kq["guideline"]["date"]   # (I) AND (P), OR 블록
         Ty = int(T[:4])
         term_dated = f"({term}) AND ({Ty + 1}:3000[dp])"            # 지침 이후(pdat)
         pmids = esearch(term_dated, datetype="edat", reldate=reldate)   # 최근 색인(edat)
