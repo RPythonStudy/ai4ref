@@ -1,5 +1,5 @@
 {
-  "_schema": "KQ 레코드. 0단계(question_type)는 사용자가 결정형으로 입력 = 권위(전문가엔 자명·재현가능·0단계 정확이 전체 성능 좌우). classify_qtype.py 는 보조 제안/검증만. 필드: kq(KQ 주제)·question_type(intervention|diagnostic|prognostic|predictive|general)·qtype_source(user)·pico{P,I,C,O}·term(검색식)·expect_pmids(검증 known-positive, relative recall)·collection·retmax·enabled. 진료지침 *감시*는 alert_anchors.yml(두-검증 A/B), 여기는 일반 *수집*(검증 A=재현).",
+  "_schema": "KQ 레코드 — 단일 정본(진료지침 감시 + 일반 수집 통합, 구 alert_anchors.yml 폐기 2026-06-21). KQ 가 1급 앵커. 0단계(question_type)는 사용자가 결정형으로 입력=권위; classify_qtype.py 는 보조. 필드: kq(주제)·question_type(intervention|diagnostic|prognostic|predictive|general)·qtype_source·pico{P,I,C,O}·term(검색식)·guideline{name,pmid,date=T}·guideline_refs(검증A: T이전 지침근거 재현)·post_guideline_landmarks(검증B: T이후 랜드마크 포착)·collection·retmax·enabled·notes. guideline 있으면 감시 KQ(두-검증), 없으면 일반 수집.",
   "search_collections": [
     {
       "kq": "주요 복부수술 환자에서 수술전후 수액 전략의 효과",
@@ -13,9 +13,10 @@
       },
       "term": "((\"Fluid Therapy\"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab] OR fluid balance[tiab] OR fluid responsiveness[tiab] OR goal-directed[tiab] OR \"goal directed\"[tiab] OR \"intravascular volume\"[tiab] OR \"central venous\"[tiab]) AND (surgery[tiab] OR surgical[tiab] OR perioperative[tiab] OR abdominal[tiab] OR \"Surgical Procedures, Operative\"[Mesh]))",
       "collection": "eras-fluid-abdominal",
-      "guideline": {"name": "ERAS 2012 elective colonic surgery", "pmid": "23099039", "date": "2012-12"},
-      "expect_pmids": ["20515521", "19519723", "19837807", "19934912", "19602972", "21173294", "16356220", "14739801", "19302633"],
+      "guideline": {"name": "ERAS 2012 elective colonic surgery — 수술전후 수액 관리 권고", "pmid": "23099039", "date": "2012-12"},
+      "guideline_refs": ["20515521", "19519723", "19837807", "19934912", "19602972", "21173294", "16356220", "14739801", "19302633"],
       "post_guideline_landmarks": ["29742967", "24842135"],
+      "notes": "함정회피=P 좁게·I/C/O 개방(O 색인누락→스크리닝 판정). 검증A(guideline_refs,T이전)=8/9 · 검증B(post_guideline_landmarks,T이후)=2/2 (2026-06-20). 검색식 v1(6/9)→v3(8/9) 경위·근거문헌 주석은 vault 노트. (구 alert_anchors.yml 통합)",
       "retmax": 1000,
       "enabled": true,
       "created_date": "2026-06-20"

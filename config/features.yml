@@ -1,0 +1,29 @@
+# ai4ref 기능 플래그 — "원하는 기능만" 켜는 멀티탭 스위치판
+# 클론 사용자는 이 파일 + .env 만으로 쓸 기능을 고른다.
+# 켜졌어도 선택 의존성/키가 없으면 자동 skip(fail-soft) — 코어 동작엔 무영향.
+
+alert:
+  enabled: true
+  # 랜드마크 판정 LLM 백엔드:
+  #   stub       = 개발용(가짜 판정, 키 불필요)
+  #   claude_cli = 로컬 Claude Code · OAuth 구독 · 추가비용 0   ← 운영 권장
+  #   api        = Anthropic API · 클라우드용 · 토큰 과금(예정)
+  llm_backend: claude_cli
+
+collector:
+  enabled: false          # 기존 수집 파이프라인(별도 능력)
+
+# 출력 통로(sink) = 멀티탭 구멍. 켜진 것만으로 fan-out.
+notify:
+  stdout:
+    enabled: true         # 의존성 0 · 항상 동작 (개발·테스트 기본 구멍)
+  telegram:
+    enabled: true         # .env 에 TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID 넣고 true
+  zotero:
+    enabled: true         # .env 에 ZOTERO_API_KEY / ZOTERO_USER_ID(write) 넣으면 활성
+    collection: ai4ref-landmarks
+
+# 보낸 랜드마크 추적(dedup) 저장소
+state:
+  backend: jsonl          # jsonl(파일·무료·클라우드친화) | postgres(예정)
+  path: state/alerted.jsonl

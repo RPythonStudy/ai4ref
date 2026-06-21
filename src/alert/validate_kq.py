@@ -3,7 +3,7 @@
 ai4ref — search_collections.json KQ 레코드 검증 (수정 개념 MVP)
 ================================================================
   [0단계] 사용자가 입력한 question_type ↔ classify_qtype 보조 제안 대조 (결정형 검증)
-  [검증 A] term(검색식)이 expect_pmids(known-positive)를 재현하나 (relative recall)
+  [검증 A] term(검색식)이 guideline_refs(지침 근거)를 재현하나 (relative recall)
   .venv/bin/python src/alert/validate_kq.py
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ def main():
     recs = json.load(open(cfg, encoding="utf-8"))["search_collections"]
     checked = 0
     for r in recs:
-        if not r.get("expect_pmids"):
+        if not r.get("guideline_refs"):
             continue                                   # 검증셋 없는 KQ(general 등) skip
         checked += 1
         print(f"\n=== KQ: {r['kq']} ===")
@@ -43,7 +43,7 @@ def main():
         Ty = int(T[:4]) if T else None
 
         # [검증 A] 검색식이 지침 근거(T 이전)를 재현하나
-        pmids = r["expect_pmids"]
+        pmids = r["guideline_refs"]
         hit = 0
         for pmid in pmids:
             term = f"({r['term']}) AND {pmid}[uid]"
@@ -62,7 +62,7 @@ def main():
                 print(f"    {'✅' if ok else '❌'} {pmid}  (landmark)")
             print(f"  [검증 B] 랜드마크 포착 = {bhit}/{len(lms)}")
     if checked == 0:
-        print("(검증셋(expect_pmids) 있는 KQ 없음)")
+        print("(검증셋(guideline_refs) 있는 KQ 없음)")
 
 if __name__ == "__main__":
     main()

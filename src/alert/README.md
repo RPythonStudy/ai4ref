@@ -1,49 +1,68 @@
-# ai4ref — 신규치료 논문 알림 (guideline-anchored alert) PoC
+# ai4ref — alert (진료지침 기반 신규문헌 감시)
 
-RPython 연구회 요청: *특정 임상영역에서 새 치료법(중재 비교 RCT)이 제안되면 Telegram 으로 1편* 보내기.
-설계 권위 = vault `[[2025-08_ai4ref]]` §응용 PoC (계층형 SR/MA-capable 의 T0 검색 + T1-경량 선별).
-
-## 파이프라인
+KQ(Key Question)마다 *검색 전략을 설정파일에 미리 구성*해 두고, 지침 제정(T) 이후 새로 색인된
+문헌에서 **지침을 바꿀 랜드마크**를 골라 알림·보관한다.
 
 ```
-진료지침-앵커 query (P·도메인·RCT 게이트, I/C 개방)
-  └ rolling 윈도우 → esearch ──────────────── 검색(recall)
-       └ esummary 메타 → LLM 게이트("권고 변경 근거?") → 저널티어·최신 랭킹 → top-1   ── 선별
-            └ Telegram (Bot API; 토큰 없으면 dry-run) ── 발송
+[KQ 앵커] search_collections.json (term·guideline·검증셋, 미리 구성)
+   └ PubMed 증분 검색(edat reldate, pdat≥T)  ── 결정론
+        └ 1차 기계 필터(날짜·중복·언어)          ── 결정론
+             └ efetch(제목·초록)
+                  └ LLM 게이트(관련·설계·랜드마크)  ── 추론(claude_cli, OAuth)
+                       └ dedup(seen-set, jsonl)
+                            └ sink fan-out → stdout · Telegram · Zotero
 ```
 
 ## 사용법
 
 ```bash
-# 검증 모드 (기본): ERAS 수액 앵커 + 2018 윈도우 → RELIEF(PMID 29742967) top-1 기대
-python3 src/alert/guideline_alert.py validate
+# 배관 검증 (가짜 랜드마크 2건)
+python src/alert/run.py --demo
 
-# 실서비스 시뮬 (rolling, 최근 N일)
-python3 src/alert/guideline_alert.py rolling 30
-ALERT_DELIVER=1 python3 src/alert/guideline_alert.py rolling 30   # 실제 Telegram 발송
+# 실 PubMed 후보만 확인 (판정·전송 없음)
+python src/alert/run.py --collect-only --reldate 60 --limit 15
+
+# 전체 실행 (claude_cli 게이트 → 진짜 랜드마크만 알림)
+python src/alert/run.py
+
+# KQ 검증 (검증 A 8/9 + 검증 B 2/2 자동 채점)
+python src/alert/validate_kq.py
 ```
 
-검증 출력 예: `[검증] 기대 PMID=29742967 | 선택=29742967 → ✅ PASS`
+## 설정 (단일 정본)
 
-## 설정
+- **`config/search_collections.json`** — KQ 앵커 레코드(진료지침 감시 + 일반 수집 통합).
+  `guideline` 있는 레코드 = 감시 KQ(두-검증). 구 `alert_anchors.yml` 은 여기로 통합·폐기(2026-06-21).
+  - `kq·question_type·pico·term·guideline{name,pmid,date=T}·guideline_refs(검증A)·post_guideline_landmarks(검증B)·enabled`
+- **`config/features.yml`** — 기능/싱크 토글 (alert·notify.{stdout,telegram,zotero}·llm_backend·state).
+- **`.env`** — `TELEGRAM_BOT_TOKEN/CHAT_ID`, `ZOTERO_API_KEY/USER_ID`, `ENTREZ_EMAIL`(선택).
+  없으면 해당 sink/기능은 fail-soft 로 자동 skip.
 
-- **앵커**: `config/alert_anchors.yml` — `mode: guideline`(우선) / `topic`(폴백).
-  규칙: **P(대상·병태)·O(임상결과)는 좁게, I/C(중재)는 개방** → 기존 중재에 안 묶여 *새* 치료법 포착.
-- **환경변수** (`.env`):
-  - `ENTREZ_EMAIL`, `PUBMED_API_KEY` (E-utilities; 키 있으면 10 req/s)
-  - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (없으면 dry-run 미리보기)
+## 모듈
 
-## 설계 주의 (vault hub "회고 ≠ 전향")
+| 파일 | 역할 |
+|---|---|
+| `run.py` | 오케스트레이터 (수집→필터→게이트→dedup→fan-out) |
+| `llm_gate.py` | 교체형 LLM 백엔드(stub\|claude_cli\|api) — 관련·랜드마크 판정 |
+| `classify_qtype.py` | 0단계 유형 판별 *보조* (권위는 사용자 입력) |
+| `validate_kq.py` | 두-검증 자동 채점 (검증A 재현 / 검증B 포착) |
+| `../notify/` | sink 멀티탭 (base·registry·stdout·telegram·zotero) |
+| `../common/` | features(플래그)·state(seen-set)·pubmed(E-utilities) |
 
-- 저널티어 표(`JOURNAL_TIER`)는 영향력의 *근사 휴리스틱* — 단일 저널 하드코딩 X, 표로 일반화.
-- "새 치료법" 판정의 원칙적 층 = **LLM 게이트**. 현재 `llm_practice_changing_gate()` 는
-  **heuristic STUB**(RCT + 제목 비교/시험 신호). production 은 Claude 에 title+abstract 분류 위임.
-- 의존성 0 (stdlib urllib), DB·biopython 불요 — 즉시 실행/검증 가능한 PoC.
+## 두-검증 (시간축 T = 지침 제정)
 
-## production 전환 TODO
+- **검증 A** (`guideline_refs`, T 이전): 검색식이 지침 근거를 재현하나 = recall. ERAS 2012 → **8/9**.
+  (`19602972` Marik=ICU ventilated 간접근거, 검색 한계로 누락 = 정직한 천장)
+- **검증 B** (`post_guideline_landmarks`, T 이후): alert 가 지침-이후 랜드마크를 포착하나. RELIEF·OPTIMISE → **2/2**.
+- 핵심: 검증 논문 ≠ 시드. 시간축으로 분리 → 순환논증 회피.
 
-- [ ] LLM 게이트 → Claude 실연결 (efetch 로 abstract 확보 후 분류·PICO 추출)
-- [ ] 검색·수집 → `src/collector.pubmed_esearch`(Entrez) + postgres 재사용 (DRY)
-- [ ] 발송 → OpenClaw Telegram (cron 자동발화; gateway 경유)
-- [ ] 앵커 다건 + dedup(이미 보낸 PMID) + rolling cron
-- [ ] precision 튜닝/검증 (known-positive 셋 확장: RELIEF 외)
+## 설계 원칙
+
+- **결정론 backbone + 최소 LLM**: 검색·날짜필터·dedup = 결정론(재현) / 관련·랜드마크 판정 = LLM 의미판단.
+- **recall 편향**: 게이트는 "애매하면 포함"(색인 전 신논문·랜드마크 누락 방지). 설계(출판유형)는 하드필터 아닌 의미판단.
+- **추가비용 0**: 게이트 = 로컬 Claude Code(OAuth 구독). API 토큰 과금 없음.
+
+## 남은 일
+
+- [ ] OpenClaw cron 등록 (매일/매주 자동 발화; Docker 컨테이너 ↔ 호스트 ai4ref 발화 방식 결정)
+- [ ] KQ 추출 add-on (지침 → KQ 자동 추출 → enabled:false 토글 레코드)
