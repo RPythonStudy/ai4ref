@@ -6,7 +6,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] `tests/unit/` 디렉토리 생성 + `tests/unit/__init__.py`(빈 파일) 추가
+- [x] T001 [P] `tests/unit/` 디렉토리 생성 + `tests/unit/__init__.py`(빈 파일) 추가
 
 ## Phase 2: Foundational
 
