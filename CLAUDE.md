@@ -29,6 +29,17 @@ uv run python -m alert.validate_kq                     # 두-검증 8/9 · 2/2
 
 메모리 [[project-roadmap]] 참조: OpenClaw cron → KQ 추출 add-on → 수집 트랙 → audit.
 
+## Workflow — Issue-First
+
+코드 변경(기능·버그·리팩터링) 커밋 전에 **관련 GitHub 이슈가 존재**해야 하며 커밋에 이슈 번호를 연결한다.
+
+1. **검색** — `gh issue list --state open --search "<키워드>"` 로 기존/유사 이슈 확인.
+2. **없으면 생성** — `gh issue create` 로 본문(현상/원인/수정 범위/검증)과 라벨(`enhancement`·`bug`, 필요시 `feature:<NNN-slug>`)을 붙여 먼저 만든다.
+3. **연결** — 커밋 메시지 끝에 `Closes #NN`(단독 해결) 또는 `refs #NN`(부분). main 직접 커밋이므로 `Closes` 가 즉시 발동.
+4. **예외** — 문서/주석/포매터/설정·메타 작업은 이슈 없이 진행 가능(애매하면 만드는 쪽).
+
+자동화: `scripts/auto-implement.sh <tasks.md>` 가 tasks.md 미완료 묶음을 위 원칙대로 구현→이슈 연결·종료까지 무인 반복(`--dangerously-skip-permissions`). 첫 실행은 지켜볼 것.
+
 <!-- SPECKIT START -->
 현재 작업 계획: `specs/001-kq-pico-authoring/plan.md` (L2 첫 피처 — KQ·PICO 정의 retro-spec).
 기술 컨텍스트·구조·산출물(research·data-model·contracts·quickstart)은 해당 plan 참조.
