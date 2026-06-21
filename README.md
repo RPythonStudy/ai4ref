@@ -111,10 +111,12 @@
    지식 베이스로 배포한다.
    - **Zotero**: 지정 컬렉션 생성·적재(`zotero_add`, DB-free). PDF 는 `Zotero_attachments`
      의 파일을 가리키는 **linked 첨부**로 연결(Zotero storage import 아님 → Gdrive 단일 출처).
-   - **2nd-brain**: PDF·XML 을 `second-brain/sources/00_inbox` 로 핸드오프 → brainify 가
-     파싱·PARA 분류·LLM 인식(로컬/OAuth). ai4ref 는 파일만 떨군다.
-   *입력: Zotero_attachments PDF·로컬 XML + 메타 → 출력: Zotero 컬렉션(linked) + 2nd-brain inbox 유입*
-   *제약: 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지). 파일 핸드오프로 결합 최소화.*
+   - **2nd-brain**: 사본을 만들지 않는다. `Zotero_attachments` 의 PDF·로컬 XML 을
+     **직접 참조**하는 포인터(파일 경로·메타 manifest/stub 노트)를 2nd-brain 에 전달 →
+     brainify 가 해당 파일을 in-place 로 파싱·PARA 분류·LLM 인식(로컬/OAuth).
+   *입력: Zotero_attachments PDF·로컬 XML 경로 + 메타 → 출력: Zotero 컬렉션(linked) +
+   2nd-brain 참조 노트(in-place)*
+   *제약: 사본 금지(단일 출처 = Gdrive). 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지).*
 
 ---
 
@@ -133,7 +135,8 @@
 운영 config = `key_questions.yml`·`features.yml`(YAML). `state/`(seen-set)·`.env`
 (시크릿)은 gitignore. 패키징 = `pyproject.toml`(uv·slim deps).
 
-### 5. 2트랙 분리 & 외부 시스템 핸드오프
+### 5. 2트랙 분리 & 외부 시스템 참조 핸드오프
 감시(precision)와 수집(bulk/recall)은 목적·평가가 다른 별개 트랙으로 운영한다. 외부
-시스템(2nd-brain) 연동은 **파일 핸드오프**(inbox 드롭)로 결합을 최소화하고, LLM 지식화
-등 무거운 처리는 해당 시스템(brainify, 로컬/OAuth)에 위임한다(추가비용 0 유지).
+시스템(2nd-brain) 연동은 사본 없이 **직접 참조 핸드오프**(Gdrive `Zotero_attachments`
+in-place 참조)로 단일 출처를 유지하고, LLM 지식화 등 무거운 처리는 해당 시스템
+(brainify, 로컬/OAuth)에 위임한다(추가비용 0 유지).
