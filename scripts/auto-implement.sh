@@ -26,7 +26,7 @@ while grep -Fq -e "- [ ]" "$TASK_FILE"; do
   echo "======================================================="
   echo "🚀 컨텍스트 초기화 후 다음 묶음 처리..."
 
-  claude -p "/speckit-implement \"1. ${TASK_FILE} 에서 아직 완료되지 않은([ ]) 다음 미완료 묶음(같은 Phase 또는 User Story) 전체를 구현해줘. 2. 테스트가 모두 통과하면 자동 커밋·푸시해. 3. CLAUDE.md 의 Issue-First 원칙대로 각 Task 에 매칭되는 GitHub 이슈를 gh issue list 로 찾고, 없으면 gh issue create 로 생성한 뒤, 완료 시 gh issue close #번호 --reason completed 로 종료해. 4. 커밋 메시지 끝에 Closes #번호 를 붙이고 헌법 커밋 규칙(한글 서술·Co-Authored-By)을 따라. 5. 완료된 Task ID·이슈 번호와 진행 상황을 짧게 보고해.\"" --dangerously-skip-permissions
+  claude -p "/speckit-implement \"1. ${TASK_FILE} 에서 아직 완료되지 않은([ ]) 다음 미완료 묶음(같은 Phase 또는 User Story) 전체만 구현해줘(그 다음 묶음은 건드리지 마). 2. 테스트가 모두 통과하면 자동 커밋·푸시해. 3. CLAUDE.md 의 Issue-First 원칙대로 매칭 GitHub 이슈를 gh issue list 로 찾고, 없으면 gh issue create 로 생성한 뒤, 완료 시 gh issue close #번호 --reason completed 로 종료해. 4. 커밋 메시지 끝에 Closes #번호 를 붙이고 헌법 커밋 규칙(한글 서술·Co-Authored-By)을 따라. 5. **${TASK_FILE} 에서 완료한 항목을 반드시 [x] 로 체크해(루프 종료 조건).** 6. 완료된 Task ID·이슈 번호와 진행 상황을 짧게 보고해.\"" --dangerously-skip-permissions
 
   echo "⏳ 사이클 완료. 2초 후 남은 작업 재확인..."
   sleep 2
