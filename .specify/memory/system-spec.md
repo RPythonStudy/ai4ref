@@ -33,7 +33,7 @@
    검색식을 파생해 PubMed 신규분만 증분 수집한다.
    - `build_query(pico)` = `(I 블록) AND (P 블록)` — 넓은 그물(결정론).
    - `esearch`(edat `reldate` 창 증분) → `efetch`(초록·메타).
-   *입력: KQ PICO + reldate(N일) → 출력: 후보 문헌(PMID·제목·초록·저널·연도)*
+   *입력: KQ PICO + reldate(N일) + PUBMED_API_KEY(선택) → 출력: 후보 문헌(PMID·제목·초록·저널·연도)*
    *제약: `[pt]` 등 설계 하드필터 검색식 투입 금지(검증 A 붕괴·신논문 누락). (헌법 IV)*
 
 004. **기계 필터 & 중복 차단 (Deterministic Filter & Dedup)** — 후보를 결정론으로
@@ -55,7 +55,7 @@
    - ② 랜드마크 = 지침과 다른 결론·practice-changing. `C`·`O`·`question_type`·
      `design_strictness`(strict|loose)를 컨텍스트로 사용.
    - 백엔드 = `claude_cli`(로컬 OAuth·Haiku), 출력 JSON 파싱.
-   *입력: 후보 초록 + KQ 게이트 컨텍스트 → 출력: {is_landmark, reason}*
+   *입력: 후보 초록 + KQ 게이트 컨텍스트 → 출력: {is_relevant, is_landmark, reason}*
    *사용자: 시스템(자동)*
    *제약: 추가비용 0(로컬). pt = 의미판단(검색식 아님). (헌법 V·IX)*
 
@@ -89,9 +89,10 @@
    - **PDF·XML 저장** = 둘 다 Google Drive `Zotero_attachments`(Zotero linked-attachment
      base, Gdrive 동기), Zotfile 명명 `<저자> 등 - <연도> - <제목>.{pdf,xml}`. 경로 =
      `AI4REF_PDF_DIR`·`AI4REF_XML_DIR`(둘 다 기본 = Zotero_attachments).
-   *입력: 수집 레코드 → 출력: 메타 + Zotero_attachments PDF·XML*
+   *입력: 수집 레코드 + PUBMED_API_KEY(선택) → 출력: 메타 + Zotero_attachments PDF·XML*
    *제약: 무료 PDF·본문 XML 은 **PMC open-access subset 한정**(외부 제약). 비OA 는
-   메타데이터만. postgres 결합 제거(DB-free) 후 재활용.*
+   메타데이터만. 파일명은 Zotero/Zotfile 명명 규칙과 일치해야 linked_file 경로가 맞음
+   (등/et al 등 상세 = L2). postgres 결합 제거(DB-free) 후 재활용.*
 
 011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
    지식 베이스로 배포한다.

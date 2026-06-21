@@ -1,22 +1,26 @@
 # 게이트 precision 참값 (acceptance truth) — 헌법 XIII·V
-# 재작성 게이트(claude CLI·Haiku)가 landmark_true 는 통과(is_landmark=true),
-# reject_false_positive 는 거부(false)해야 등가. 백필 96건 FP 0 실측(2026-06).
-# 게이트 ① = 대상(P) AND 중재(I) 동시 매칭 → 토픽-인접 FP 차단. ② = 랜드마크 판정.
+# 게이트 출력 스키마 = {is_relevant, is_landmark, reason} (L1 §006).
+# 게이트 ① 관련성 = 대상(P) AND 중재(I) 동시 매칭 → is_relevant. ② 랜드마크 = is_landmark.
+# 재작성 게이트(claude CLI·Haiku)가 아래 기대판정을 재현해야 등가. 백필 96건 FP 0 실측(2026-06).
 
 key_question: "주요 복부수술 환자에서 수술전후 수액 전략의 효과 (ERAS 2012)"
 
-# is_landmark=true 여야 (P·I 동시매칭 + practice-changing)
+# 기대: is_relevant=true, is_landmark=true (P·I 동시매칭 + practice-changing)
 landmark_true:
   - pmid: "29742967"
     name: "RELIEF (Myles, NEJM 2018)"
+    expect: { is_relevant: true, is_landmark: true }
     why: "near-zero balance 가 ERAS liberal/restrictive 권고를 뒤집음(practice-changing)"
   - pmid: "24842135"
     name: "OPTIMISE (Pearse, JAMA 2014)"
+    expect: { is_relevant: true, is_landmark: true }
     why: "goal-directed, major GI surgery"
 
-# is_landmark=false 여야 (토픽 인접 — 게이트 ①의 P·I 동시매칭에서 차단)
+# 기대: is_relevant=false (게이트 ①에서 차단 → is_landmark 평가 불요) — 토픽 인접 FP
 reject_false_positive:
   - case: "신장이식 goal-directed fluid"
+    expect: { is_relevant: false }
     why: "P 불일치 — 대상=신장이식(복부수술 아님) → P·I 동시매칭 실패"
   - case: "로봇 vs 복강경 직장절제"
+    expect: { is_relevant: false }
     why: "I 불일치 — 중재=수술 술기 비교(수액 전략 아님) → P·I 동시매칭 실패"
