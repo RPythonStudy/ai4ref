@@ -18,18 +18,18 @@
 **Independent Test**: ERAS KQ 1건 로드 → `build_query(pico)` 출력이 acceptance `derived_query`
 와 문자 일치(`quickstart.md` §1·§4).
 
-- [ ] T002 [P] [US1] build_query 단위테스트 작성 `tests/unit/test_query.py` — `key_questions.yml`
+- [x] T002 [P] [US1] build_query 단위테스트 작성 `tests/unit/test_query.py` — `key_questions.yml`
   의 ERAS KQ `pico` 로 `build_query` 호출 → `recall_baseline.yml.derived_query` 와 일치 단언
   (contracts/build_query.md C1~C6)
-- [ ] T003 [US1] `src/common/query.py` 의 `build_query(pico)` 재작성 — `(I OR …) AND (P OR …)`,
+- [x] T003 [US1] `src/common/query.py` 의 `build_query(pico)` 재작성 — `(I OR …) AND (P OR …)`,
   C·O 제외, 항목 원형 보존, 결정론 (contracts/build_query.md). API 는 docstring·type hint (헌법 XVI)
-- [ ] T004 [US1] `src/common/kq.py` 신규 — `load_kqs(path?)`·`validate_kq_record(rec)`:
+- [x] T004 [US1] `src/common/kq.py` 신규 — `load_kqs(path?)`·`validate_kq_record(rec)`:
   YAML `kqs` 로드 + data-model.md 검증규칙 1~4(필수필드·P/I 비어있지 않음·query 필드 부재·enum)
-- [ ] T005 [US1] `src/common/query_spec.md` 작성 (L3 ≤200줄) — 모듈·테스트·FR(002·003·004) 참조 +
+- [x] T005 [US1] `src/common/query_spec.md` 작성 (L3 ≤200줄) — 모듈·테스트·FR(002·003·004) 참조 +
   비즈니스 규칙(파생·C/O 제외·정련=리스트성장). API 시그니처는 코드로 일원화(헌법 XI)
-- [ ] T006 [US1] `src/common/kq_spec.md` 작성 (L3 ≤200줄) — 모듈·테스트·FR(001·002·003·007·009) 참조 +
+- [x] T006 [US1] `src/common/kq_spec.md` 작성 (L3 ≤200줄) — 모듈·테스트·FR(001·002·003·007·009) 참조 +
   검증규칙·단일출처
-- [ ] T007 [US1] `config/key_questions.yml` 스키마 적합 점검 — 기존 ERAS 레코드가 스키마 준수,
+- [x] T007 [US1] `config/key_questions.yml` 스키마 적합 점검 — 기존 ERAS 레코드가 스키마 준수,
   검색식(`query`) 필드 없음 확인 (kq_schema.md)
 
 ## Phase 4: User Story 2 — 두-검증 앵커 (P2)
