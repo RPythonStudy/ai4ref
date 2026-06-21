@@ -1,9 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (2026-06-22 개정: 수집 트랙 반영)
+- Version change: 1.1.0 → 1.2.0 (2026-06-22 개정: L1 = README → system-spec.md 분리)
 - Ratified: 2026-06-21
-- Modified principles: X. Config 단순화 — 감시+수집 2트랙(L1 §009~011) 반영: collector
-  폐기 → DB-free 부활, 수집 주제 config 추가(통합/분리 L2 확정)
+- Modified principles:
+  - XI. Collocated Spec — L1 = `.specify/memory/system-spec.md`(README 는 사용자용 분리,
+    cortex 의 L1=README 에서 의도적 분기, 프롬프트 최적화)
+  - (1.1.0) X. Config 단순화 — 감시+수집 2트랙(L1 §009~011): collector DB-free 부활,
+    수집 주제 config 추가(통합/분리 L2 확정)
 - Added sections:
   - Core Principles I~X (Part A 임상 감시 도메인 — 불변)
   - Core Principles XI~XVIII (Part B 엔지니어링 규율 — cortex-kit 계승)
@@ -82,9 +85,11 @@ DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 
 ### XI. Collocated Spec (3계층 명세 — cortex-kit 차용)
 명세는 3계층으로 둔다:
-- **L1 (프로젝트)** = `README.md` 의 기능 카탈로그(번호 기능 + 입력/출력/제약) +
-  횡단 설계 `docs/*.md`. rpy-quarto-template fork README 는 삭제가 아니라 L1 으로
-  재작성한다.
+- **L1 (프로젝트)** = `.specify/memory/system-spec.md`(기능 카탈로그 001~ : 입력/출력/제약,
+  agent 컨텍스트 주입 정본) + 횡단 설계 `docs/*.md`. 루트 `README.md` 는 L1 명세가 아니라
+  **사용자(GitHub)용**(소개·기능 요약·Quickstart·라이선스)으로 분리한다 — agent 컨텍스트엔
+  README 대신 system-spec·constitution 을 싣는다(프롬프트 최적화). cortex 의 "L1=README"
+  에서 ai4ref 가 의도적으로 분기.
 - **L2 (피처)** = `specs/<NNN-feature>/`(Spec Kit 산출물: spec·plan·data-model·
   research·tasks·analysis). `/speckit-*` 명령으로 생성·관리한다.
 - **L3 (컴포넌트)** = 코드 옆 동거 `<모듈>_spec.md`(예: `llm_gate.py` ↔
@@ -166,4 +171,4 @@ DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
 - 헌법 수정 절차: 수정 제안 → 영향 분석(Sync Impact Report) → 의존 템플릿 갱신 →
   버전 범프 → 비준.
 
-**Version**: 1.1.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-22
+**Version**: 1.2.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-22

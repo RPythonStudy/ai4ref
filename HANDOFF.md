@@ -23,7 +23,7 @@
 **헌법 초안 준비됨**: `docs/constitution-draft.md` — Spec Kit init 후 `/speckit.constitution` 입력으로 그대로 투입(형식만 v0.11.3 템플릿에 정렬). cortex-kit 헌법(V~XII·부가) 흡수 + 본 §불변 설계 결정 1~10.
 
 ### 명세 3계층 (cortex-kit 차용)
-- **L1** = `README.md`(기능 카탈로그) + `docs/*.md`(횡단 설계). ← rpy-quarto-template README 를 *삭제 말고* L1 으로 재작성.
+- **L1** = `.specify/memory/system-spec.md`(기능 카탈로그·입력/출력/제약, agent 컨텍스트 정본) + `docs/*.md`. 루트 `README.md` 는 **사용자용**(소개·Quickstart)으로 분리 — agent 컨텍스트엔 README 대신 system-spec·constitution.
 - **L2** = `specs/<NNN-feature>/`(Spec Kit `/speckit.*` 산출물).
 - **L3** = 코드 옆 `<모듈>_spec.md`(예: `llm_gate.py` ↔ `llm_gate_spec.md`). Spec Kit 자동생성 아님 = 수작업, 코드와 동일 커밋 동기. (헌법 XI)
 

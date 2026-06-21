@@ -59,8 +59,9 @@ L1 §009) + `features.yml`(토글). 수집 주제를 `key_questions.yml` 에 `ty
 
 ### XI. Collocated Spec (3계층 명세 — cortex-kit 차용)
 명세는 3계층으로 둔다(cortex-kit 실증 구조):
-- **L1 (프로젝트)** = `README.md` 의 기능 카탈로그(번호 기능 + 입력/출력/제약) +
-  횡단 설계 `docs/*.md`. rpy-quarto-template fork README 는 **삭제가 아니라 L1 으로 재작성**.
+- **L1 (프로젝트)** = `.specify/memory/system-spec.md`(기능 카탈로그·입력/출력/제약, agent
+  컨텍스트 정본) + 횡단 설계 `docs/*.md`. 루트 `README.md` 는 **사용자(GitHub)용**으로 분리
+  (소개·기능요약·Quickstart·라이선스). agent 컨텍스트엔 README 대신 system-spec·constitution.
 - **L2 (피처)** = `specs/<NNN-feature>/`(Spec Kit 산출물: spec·plan·data-model·
   research·tasks·analysis). `/speckit.*` 명령으로 생성·관리.
 - **L3 (컴포넌트)** = 코드 옆 동거 `<모듈>_spec.md`(예: `orchestrator.py` ↔
