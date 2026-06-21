@@ -1,8 +1,10 @@
 # ai4ref (Guideline-anchored New-Literature Surveillance)
 
-진료지침의 Key Question(PICO)을 기준으로 PubMed 신규 문헌을 매일 감시하여,
-지침과 다른 결론·practice-changing 랜드마크만 선별해 알림(Telegram)·보관(Zotero)한다.
-결정론 backbone 위에 최소 LLM 게이트를 얹은, 추가비용 0의 1인 운영 파이프라인.
+두 트랙으로 PubMed 문헌을 다룬다. **감시(alert)**: 진료지침의 Key Question(PICO)을
+기준으로 신규 문헌을 매일 감시해 지침과 다른 결론·practice-changing 랜드마크만 선별해
+알림(Telegram)·보관(Zotero)한다. **수집(collect)**: 자연어 주제를 받아 대량 검색·본문
+확보(PDF·XML)하여 Zotero 컬렉션·로컬·2nd-brain 으로 배포한다. 둘 다 결정론 backbone
+위에 최소 LLM 을 얹은, 추가비용 0의 1인 운영 파이프라인이다.
 
 > 이 문서는 프로젝트 최상위 명세(L1)다. 피처 명세는 `specs/<NNN-feature>/`(L2),
 > 컴포넌트 명세는 코드 옆 `<모듈>_spec.md`(L3)에 둔다. 설계 헌법 =
@@ -23,6 +25,8 @@
 ---
 
 ## 주요 기능 (L1 Features)
+
+### 감시 트랙 (Surveillance / Alert) — 001~008
 
 001. **KQ·PICO 정의 (Key Question & PICO Authoring)** — `key_questions.yml` 에 감시
    대상 지침의 KQ 를 PICO 로 정의한다.
@@ -82,6 +86,34 @@
    *입력: 스케줄 → 출력: 일일 감시 실행(003→007)*
    *제약: 로컬 발화(추가비용 0). 컨테이너(OpenClaw)↔호스트(ai4ref·claude) 발화 위임.*
 
+### 수집 트랙 (Bulk Collection → 2nd-brain) — 009~011
+
+> 감시 트랙과 별개: 선별(precision)이 아니라 주제 기반 대량 확보(recall/bulk)로,
+> 수집물을 Zotero·로컬·2nd-brain 으로 배포해 LLM 지식화에 쓴다.
+
+009. **주제 수집 정의 (Topic Collection Authoring)** [신규] — 사용자가 자연어로 전달한
+   주제를 검색 가능한 수집 레코드로 저장한다.
+   - 자연어 주제 → 검색어(term) + 대상 Zotero 컬렉션명 + retmax 등으로 정규화해 적재.
+   *입력: 자연어 주제 → 출력: 수집 레코드(term·컬렉션·옵션)*
+   *제약: config 저장. 감시 KQ(PICO)와 성격이 달라 `key_questions.yml` 통합(type 필드)
+   vs 분리는 L2 에서 확정. (헌법 X 재검토 대상)*
+
+010. **대량수집 & 본문 확보 (Bulk Collection & Full-text Acquisition)** [신규] — 주제
+   레코드로 PubMed 를 대량 검색하고 가용 본문을 내려받아 로컬에 저장한다.
+   - term `esearch`(retmax) → `efetch`(메타) → PMC PDF/본문 XML 다운로드.
+   - 로컬 저장: PDF → `AI4REF_PDF_DIR`(data/pdf), XML → 로컬 경로.
+   *입력: 수집 레코드 → 출력: 메타 + 로컬 PDF·XML*
+   *제약: 무료 PDF·본문 XML 은 **PMC open-access subset 한정**(외부 제약). 비OA 는
+   메타데이터만. postgres 결합 제거(DB-free) 후 재활용.*
+
+011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
+   지식 베이스로 배포한다.
+   - **Zotero**: 지정 컬렉션 생성·적재(`zotero_add`, DB-free) + PDF 첨부.
+   - **2nd-brain**: PDF·XML 을 `second-brain/sources/00_inbox` 로 핸드오프 → brainify 가
+     파싱·PARA 분류·LLM 인식(로컬/OAuth). ai4ref 는 파일만 떨군다.
+   *입력: 로컬 PDF·XML + 메타 → 출력: Zotero 컬렉션 적재 + 2nd-brain inbox 유입*
+   *제약: 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지). 파일 핸드오프로 결합 최소화.*
+
 ---
 
 ## 시스템 운영 및 설계 거버넌스 (Global Policies)
@@ -96,5 +128,10 @@
 게이트·cron 모두 로컬(claude_cli OAuth · OpenClaw). 유료 API 미도입.
 
 ### 4. config·데이터 거버넌스
-운영 config = `key_questions.yml`·`features.yml`(YAML 2종). `state/`(seen-set)·`.env`
+운영 config = `key_questions.yml`·`features.yml`(YAML). `state/`(seen-set)·`.env`
 (시크릿)은 gitignore. 패키징 = `pyproject.toml`(uv·slim deps).
+
+### 5. 2트랙 분리 & 외부 시스템 핸드오프
+감시(precision)와 수집(bulk/recall)은 목적·평가가 다른 별개 트랙으로 운영한다. 외부
+시스템(2nd-brain) 연동은 **파일 핸드오프**(inbox 드롭)로 결합을 최소화하고, LLM 지식화
+등 무거운 처리는 해당 시스템(brainify, 로컬/OAuth)에 위임한다(추가비용 0 유지).
