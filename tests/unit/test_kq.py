@@ -10,7 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from common.kq import load_kqs, validate_kq_record
+from common.kq import (
+    load_kqs,
+    validate_kq_record,
+    effective_design_strictness,
+    is_kq_enabled,
+)
 
 _ROOT = Path(__file__).resolve().parents[2]
 _KQ = _ROOT / "config" / "key_questions.yml"
@@ -76,3 +81,67 @@ def test_guideline_date_format_validated():
     rec["guideline"]["date"] = "2012/12"
     with pytest.raises(ValueError, match="date"):
         validate_kq_record(rec)
+
+
+# ── US3 감시 제어 (T010, FR-007) ────────────────────────────────────────────
+
+def test_design_strictness_defaults_to_loose():
+    """design_strictness 미지정 → 기본 loose(recall 우선)."""
+    rec = _valid_rec()
+    assert "design_strictness" not in rec
+    assert effective_design_strictness(rec) == "loose"
+
+
+def test_design_strictness_explicit_preserved():
+    """design_strictness 명시값은 그대로 사용."""
+    rec = _valid_rec()
+    rec["design_strictness"] = "strict"
+    assert effective_design_strictness(rec) == "strict"
+
+
+def test_enabled_defaults_to_true():
+    """enabled 미지정 → 기본 활성(True)."""
+    rec = _valid_rec()
+    assert "enabled" not in rec
+    assert is_kq_enabled(rec) is True
+
+
+def test_enabled_false_disables():
+    """enabled: false 만 비활성."""
+    rec = _valid_rec()
+    rec["enabled"] = False
+    assert is_kq_enabled(rec) is False
+
+
+def test_load_only_enabled_excludes_disabled(tmp_path):
+    """load_kqs(only_enabled=True) 가 enabled:false KQ 를 제외."""
+    import yaml
+    on, off = _valid_rec(), _valid_rec()
+    on["kq"], off["kq"], off["enabled"] = "on", "off", False
+    p = tmp_path / "kq.yml"
+    p.write_text(yaml.safe_dump({"kqs": [on, off]}), encoding="utf-8")
+    assert [r["kq"] for r in load_kqs(p)] == ["on", "off"]                 # 기본: 전부
+    assert [r["kq"] for r in load_kqs(p, only_enabled=True)] == ["on"]     # 비활성 제외
+
+
+def test_enabled_must_be_bool():
+    """enabled 가 bool 이 아니면 차단."""
+    rec = _valid_rec()
+    rec["enabled"] = "yes"
+    with pytest.raises(ValueError, match="enabled"):
+        validate_kq_record(rec)
+
+
+def test_collection_must_be_str():
+    """collection 이 문자열이 아니면 차단(있을 때만)."""
+    rec = _valid_rec()
+    rec["collection"] = ["a", "b"]
+    with pytest.raises(ValueError, match="collection"):
+        validate_kq_record(rec)
+
+
+def test_collection_passes_through():
+    """collection 문자열은 통과·보존."""
+    rec = _valid_rec()
+    rec["collection"] = "eras-fluid-abdominal"
+    validate_kq_record(rec)   # 예외 없음

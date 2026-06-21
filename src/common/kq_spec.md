@@ -10,8 +10,9 @@
 
 - 모듈: `src/common/kq.py`
 - 공개 API (시그니처 = 코드 docstring):
-  - `load_kqs(path?) -> list[dict]` — `kqs` 리스트 적재·검증·반환
+  - `load_kqs(path?, only_enabled=False) -> list[dict]` — `kqs` 리스트 적재·검증·반환
   - `validate_kq_record(rec) -> None | raises` — 레코드 1건 검증
+  - `effective_design_strictness(rec) -> str` · `is_kq_enabled(rec) -> bool` — 제어 기본값(US3)
 - 권위 원본: `config/key_questions.yml` (단일 출처). 검색식 파생 = [[query]].
 
 ## 검증 규칙 (data-model.md 1~4, US1 범위)
@@ -35,8 +36,19 @@
   `post_guideline_landmarks` = PMID 리스트. 형태 위반은 차단(`ValueError`).
 - 앵커는 검색식·게이트에 직접 쓰이지 않음 — 검증 A/B(`validate_kq`)의 참값일 뿐.
 
-> 증분 규칙(US3): `design_strictness` 기본 `loose`·`enabled` 기본 처리·`question_type`
-> enum·`collection` 통과는 후속 태스크(T010)에서 본 명세에 추가한다.
+## 감시 제어 속성 (US3, FR-007)
+
+KQ 별 감시 제어 속성 — 모두 **선택**, 기본값은 헌법 VII(recall 우선)을 따른다.
+
+- **`design_strictness`** ∈ {strict, loose}, 미지정 → 기본 `loose`. 유효값은
+  `effective_design_strictness(rec)` 로 일원화(게이트 2단계 랜드마크 판정 엄격도).
+- **`enabled`** = bool, 미지정 → 기본 `True`(활성). 명시 `false` 만 감시 비활성.
+  `is_kq_enabled(rec)` 로 판정하고 `load_kqs(only_enabled=True)` 가 비활성 KQ 를 제외.
+- **`collection`** = str(Zotero 보관 컬렉션명), 통과·보존(스키마는 형태만 확인).
+- **`question_type`** ∈ enum — 검증은 규칙 4 와 동일(필수 필드, US1).
+
+형태 위반(`enabled` 비-bool, `collection` 비-str)은 차단(`ValueError`). 기본값은
+**저장하지 않고** 조회 시점에 적용(단일 출처 — YAML 에 명시된 값만 권위).
 
 ## 단일 출처 (헌법 XVI)
 

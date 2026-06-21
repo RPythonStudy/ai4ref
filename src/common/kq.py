@@ -24,6 +24,10 @@ DEFAULT_KQ_PATH = _ROOT / "config" / "key_questions.yml"
 QUESTION_TYPES = ("intervention", "diagnostic", "prognostic", "predictive")
 DESIGN_STRICTNESS = ("strict", "loose")
 
+# 감시 제어 기본값 (US3, FR-007·헌법 VII — recall 우선)
+DEFAULT_DESIGN_STRICTNESS = "loose"   # design_strictness 미지정 → loose
+DEFAULT_ENABLED = True                # enabled 미지정 → 활성(명시 false 만 비활성)
+
 # 저장 금지 필드 — 검색식은 PICO 에서 파생(헌법 III)
 FORBIDDEN_FIELDS = ("query",)
 
@@ -41,6 +45,7 @@ def validate_kq_record(rec: dict) -> None:
     2. `pico.P`·`pico.I` 가 비어있지 않은 리스트.
     3. 검색식 필드(`query` 등) 부재(레코드·pico 양쪽).
     4. `question_type` ∈ enum, `design_strictness` ∈ {strict, loose} 또는 미지정.
+       감시 제어(US3): `enabled` = bool, `collection` = str (있을 때만, 모두 선택).
     5. (경고) `guideline_refs` ∩ `post_guideline_landmarks` 중복 PMID = 정의 오류 표면화.
 
     검증 앵커(`guideline.date`·`guideline_refs`·`post_guideline_landmarks`)는 모두
@@ -84,6 +89,16 @@ def validate_kq_record(rec: dict) -> None:
         raise ValueError(
             f"KQ '{label}' 검증 실패: design_strictness='{ds}' 미허용 (허용: {', '.join(DESIGN_STRICTNESS)} 또는 미지정)")
 
+    # 감시 제어 속성(US3, FR-007) — 모두 선택. enabled 는 bool, collection 은 str(있을 때).
+    enabled = rec.get("enabled")
+    if enabled is not None and not isinstance(enabled, bool):
+        raise ValueError(
+            f"KQ '{label}' 검증 실패: enabled={enabled!r} 는 bool 이어야 함(true|false 또는 미지정)")
+    collection = rec.get("collection")
+    if collection is not None and not isinstance(collection, str):
+        raise ValueError(
+            f"KQ '{label}' 검증 실패: collection={collection!r} 는 문자열이어야 함(컬렉션명)")
+
     # 검증 앵커 — guideline.date(T) 형식(선택)
     gdate = guideline.get("date")
     if gdate is not None and not _DATE_RE.match(str(gdate)):
@@ -110,11 +125,31 @@ def validate_kq_record(rec: dict) -> None:
             UserWarning, stacklevel=2)
 
 
-def load_kqs(path: str | Path | None = None) -> list[dict]:
+def effective_design_strictness(rec: dict) -> str:
+    """KQ 의 유효 `design_strictness` — 미지정이면 기본 `loose`(US3, FR-007·헌법 VII).
+
+    게이트 2단계의 랜드마크 판정 엄격도. 미지정/빈값 → recall 우선의 loose.
+    """
+    ds = rec.get("design_strictness")
+    return ds if ds in DESIGN_STRICTNESS else DEFAULT_DESIGN_STRICTNESS
+
+
+def is_kq_enabled(rec: dict) -> bool:
+    """감시 토글 — `enabled` 미지정이면 기본 활성(True). 명시 `false` 만 비활성(US3).
+
+    감시 대상에서 KQ 를 끄는 단일 기준. `load_kqs(only_enabled=True)` 가 이 함수로 거른다.
+    """
+    return bool(rec.get("enabled", DEFAULT_ENABLED))
+
+
+def load_kqs(path: str | Path | None = None, *, only_enabled: bool = False) -> list[dict]:
     """key_questions.yml 의 `kqs` 리스트를 적재·검증해 반환.
 
     각 레코드에 validate_kq_record 를 적용 — 하나라도 위반하면 ValueError(차단).
     검증 통과 레코드만 반환(결정론, 파일 순서 보존).
+
+    `only_enabled=True` 면 감시 비활성(`enabled: false`) KQ 를 제외한다(US3). 검증은
+    전 레코드에 먼저 적용하므로 비활성 KQ 의 스키마 오류도 똑같이 조기 차단된다.
     """
     p = Path(path) if path else DEFAULT_KQ_PATH
     data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
@@ -124,4 +159,6 @@ def load_kqs(path: str | Path | None = None) -> list[dict]:
             validate_kq_record(rec)
         except ValueError as e:
             raise ValueError(f"[{p.name} #{i}] {e}") from e
+    if only_enabled:
+        records = [r for r in records if is_kq_enabled(r)]
     return list(records)

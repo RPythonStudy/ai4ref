@@ -48,9 +48,9 @@
 **Independent Test**: `enabled:false` KQ 제외, `design_strictness` 미지정 → `loose`.
 **Depends on**: US1 (`kq.py`) — 순차.
 
-- [ ] T010 [US3] `src/common/kq.py` 에 `design_strictness` 기본 `loose`·`enabled` 기본 처리·
+- [x] T010 [US3] `src/common/kq.py` 에 `design_strictness` 기본 `loose`·`enabled` 기본 처리·
   `question_type` enum 검증·`collection` 통과 추가 (FR-007, data-model.md)
-- [ ] T011 [US3] `src/common/kq_spec.md` 에 제어 속성 기본·FR-007 반영
+- [x] T011 [US3] `src/common/kq_spec.md` 에 제어 속성 기본·FR-007 반영
 
 ## Phase 6: Polish & 등가 검증
 
