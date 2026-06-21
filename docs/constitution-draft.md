@@ -50,9 +50,10 @@ ai4ref 헌법 초안 (draft) — 2026-06-21
 유료 API 호출을 도입하지 않는다.
 
 ### X. Config 단순화 (YAML)
-운영 config = `key_questions.yml`(감시 KQ·PICO·두-검증) + `features.yml`(토글).
-collector 폐기 후 `legacy_collections.yml`·`postgres.yml`·`logging.yml` 는 제거한다.
-모든 설정은 YAML.
+운영 config = 감시(`key_questions.yml`: KQ·PICO·두-검증) + 수집(term-based 수집 주제,
+L1 §009) + `features.yml`(토글). 수집 주제를 `key_questions.yml` 에 `type` 필드로 통합 vs
+별도 config 는 L2 확정. `postgres.yml`·`logging.yml` 제거(DB-free·stderr 폴백). collector
+는 폐기가 아니라 수집 트랙 backbone 으로 DB-free 재작성. 모든 설정은 YAML.
 
 ## Part B. 엔지니어링 규율 (Cortex-Kit 계승 · ai4ref 보정)
 
@@ -124,4 +125,6 @@ LLM 출력 검증. **검증 A/B 의 golden PMID, 정련된 PICO OR-리스트, �
 - Part A(도메인 불변)는 재논의 금지. 변경은 실측 근거 제시 시에만.
 - 변경은 시맨틱 버저닝을 따르고, Sync Impact Report 와 템플릿 정합 검토를 거친다.
 
-**Version**: 0.1.0 (draft) | **Ratified**: TODO | **Last Amended**: 2026-06-21
+**Version**: 0.1.0 (draft) | **Ratified**: TODO | **Last Amended**: 2026-06-22
+<!-- 정식 비준본 = .specify/memory/constitution.md (현재 v1.1.0). 이 draft 는 권위 원본 내용 보존용. -->
+

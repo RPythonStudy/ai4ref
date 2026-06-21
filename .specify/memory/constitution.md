@@ -1,8 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: (초기 비준) → 1.0.0
+- Version change: 1.0.0 → 1.1.0 (2026-06-22 개정: 수집 트랙 반영)
 - Ratified: 2026-06-21
-- Modified principles: 없음 (최초 비준)
+- Modified principles: X. Config 단순화 — 감시+수집 2트랙(L1 §009~011) 반영: collector
+  폐기 → DB-free 부활, 수집 주제 config 추가(통합/분리 L2 확정)
 - Added sections:
   - Core Principles I~X (Part A 임상 감시 도메인 — 불변)
   - Core Principles XI~XVIII (Part B 엔지니어링 규율 — cortex-kit 계승)
@@ -72,10 +73,12 @@ FP 차단) ② 랜드마크 = 지침과 다른 결론·practice-changing 의 2�
 **근거**: 운영 지속가능성 — 종량 과금 의존 제거.
 
 ### X. Config 단순화 (YAML)
-운영 config 는 `key_questions.yml`(감시 KQ·PICO·두-검증) + `features.yml`(토글)로
-한정한다. collector 폐기 후 `legacy_collections.yml`·`postgres.yml`·`logging.yml`
-는 제거한다. 모든 설정은 YAML 로 작성한다.
-**근거**: 설정 표면적 최소화, 단일 형식.
+운영 config 는 감시(`key_questions.yml`: KQ·PICO·두-검증) + 수집(term-based 수집 주제,
+L1 §009) + `features.yml`(토글)로 한정한다. 수집 주제를 `key_questions.yml` 에 `type`
+필드로 통합할지 별도 config 로 둘지는 L2 에서 확정한다. `postgres.yml`·`logging.yml` 는
+제거한다(DB-free·stderr 폴백). collector 는 폐기가 아니라 수집 트랙 backbone 으로
+DB-free 재작성한다. 모든 설정은 YAML 로 작성한다.
+**근거**: 설정 표면적 최소화·단일 형식. 감시·수집 2트랙(L1) 반영.
 
 ### XI. Collocated Spec (3계층 명세 — cortex-kit 차용)
 명세는 3계층으로 둔다:
@@ -163,4 +166,4 @@ FP 차단) ② 랜드마크 = 지침과 다른 결론·practice-changing 의 2�
 - 헌법 수정 절차: 수정 제안 → 영향 분석(Sync Impact Report) → 의존 템플릿 갱신 →
   버전 범프 → 비준.
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-21
+**Version**: 1.1.0 | **Ratified**: 2026-06-21 | **Last Amended**: 2026-06-22

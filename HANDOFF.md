@@ -31,18 +31,21 @@
 아래는 재작성 **범위**(기능 단위)다. 기존 파일을 그대로 옮기지 말고, L3 `<모듈>_spec.md` 먼저 → 구현 → 검증 참값 통과 순으로 새로 짠다.
 - config: `key_questions.yml`(PICO OR-블록·두-검증 = 검증 참값) · `features.yml`(토글) — *값은 참값으로 보존, 스키마는 재정의 가능*
 - `notify/` (base·registry·stdout·telegram·zotero sink) — Sink 플러그 모양(헌법 VIII·XII 의 유일 허용 상속)
-- `alert/` (run·llm_gate·validate_kq·classify_qtype) — 결정론 backbone + 게이트 2단계
-- `common/` (features·pubmed·query·state)
+- **감시 트랙** `alert/` (run·llm_gate·validate_kq·classify_qtype) — 결정론 backbone + 게이트 2단계 (L1 §001~008)
+- **수집 트랙** `collect/` [신규] — 주제 수집 정의·대량검색·PMC PDF/XML 다운로드·Zotero linked_file·2nd-brain 직접 참조 (L1 §009~011). **기존 `collector/` 의 esearch·efetch·pmc_downloader·zotero_add 를 postgres 제거(DB-free)하여 재활용**
+- `common/` (features·pubmed·query·state·**zotero**) — 양 트랙 공유
 - `.env`(시크릿)·`.gitignore`·이 문서들(HANDOFF·CLAUDE·constitution-draft) = 그대로 이어씀
 
 ### 재작성 시 합칠 것 (기존의 부채를 신규에 반영)
-- zotero 헬퍼: 기존엔 `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import. 신규는 **`common/zotero.py` 단일 출처**로 작성(헌법 XVI No Duplication, collector 없음 전제).
+- zotero 헬퍼: 기존엔 `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import. 신규는 **`common/zotero.py` 단일 출처**로 작성(헌법 XVI No Duplication) → 감시(zotero sink)·수집(linked_file 배포) 양 트랙이 공유. `zotero_add.py` 는 이미 DB-free 라 로직 재활용 용이.
 - 로거: `pyproject` slim deps 기조 → 표준 `logging` + stderr 폴백으로 단순화(logger.py·logging.yml 재작성 안 함).
 
 ### DISCARD (cruft 전량)
 - 템플릿: `_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock` (※ `README.md` 는 DISCARD 아님 → L1 명세로 재작성)
 - R 트랙: `src/R/`·`src/Rlib/`·`src/preprocessor/`·`src/summerizer/`
-- collector 파이프라인: `src/collector/*`(zotero 로직은 `common/zotero.py` 로 신규 재작성), `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml, legacy_collections.yml}`
+- DB·R 인프라: `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml}`
+- ⚠️ `src/collector/*` 는 **전량 DISCARD 아님** — esearch·efetch·pmc_downloader·zotero_add 는 수집 트랙으로 **DB-free 재작성하여 부활**(위 REBUILD). postgres 결합 코드(get_db_connection·collection_pmid/papers 테이블 워크플로)만 폐기.
+- `config/legacy_collections.yml`: term-based 수집 주제 = 수집 트랙(L1 §009)으로 **재정의**. `key_questions.yml` 통합(type 필드) vs 별도 config 는 L2 확정 (헌법 X).
 - 오케스트레이션: `Makefile`·`Makefile_project`·`scripts/`
 - 패키징: `requirements.txt`(flat freeze) → **`pyproject.toml`(uv·src layout·slim deps: pyyaml·python-dotenv·requests·pyzotero)**
 
@@ -76,14 +79,21 @@
 ## 아키텍처
 
 ```
+[감시 트랙 · alert]
 PubMed ──검색·efetch──▶ ai4ref ──판정요청──▶ Claude Code (게이트, OAuth·Haiku)
                           │
               ┌───────────┼───────────┐
         Telegram(알림)  Zotero(보관)  stdout      ← notify sink 멀티탭(features.yml 토글)
                           ▲
                      OpenClaw cron (자율 발화 · 미구현)
+
+[수집 트랙 · collect]
+자연어 주제 → config ──term 검색·efetch·PMC다운로드──▶ Gdrive Zotero_attachments (PDF·XML)
+                                                          ├─▶ Zotero 서지+컬렉션+linked_file (클라이언트 Zotfile 1단계)
+                                                          └─▶ 2nd-brain 직접 참조 (brainify 파싱·LLM, 사본 없음)
 ```
-파이프라인: 수집(esearch edat 증분) → ① 기계필터(날짜·중복·언어) → efetch → ② 게이트(관련·랜드마크) → dedup(seen-set jsonl) → sink fan-out.
+감시 파이프라인: 수집(esearch edat 증분) → ① 기계필터(날짜·중복·언어) → efetch → ② 게이트(관련·랜드마크) → dedup(seen-set jsonl) → sink fan-out.
+수집 파이프라인: 주제(term) esearch → efetch(메타) → PMC PDF/XML 다운로드 → Zotero_attachments 저장(Zotfile 명명) → Zotero linked_file + 2nd-brain 참조.
 
 ---
 
@@ -98,7 +108,7 @@ PubMed ──검색·efetch──▶ ai4ref ──판정요청──▶ Claude C
 7. **recall 편향 (loose 기본)** — 관련(P·I 일치)이면 경계선도 알림. 놓침이 가장 비싼 오류. (Dr. Ben 선호 = loose)
 8. **모듈 sink 멀티탭** — `notify/{base,registry,stdout,telegram,zotero}`. 키 없으면 fail-soft skip. `features.yml` 토글.
 9. **추가비용 0** — 게이트 = 로컬 `claude_cli`(OAuth 구독). cron 도 로컬(OpenClaw).
-10. **config 2분할** — `key_questions.yml`(임상 감시 KQ, PICO·두-검증) / `legacy_collections.yml`(일반 주제 대량수집, term-based, 아카이브·collector 전용). 모든 config YAML.
+10. **config** (헌법 X·v1.1.0) — `key_questions.yml`(감시 KQ, PICO·두-검증) + `features.yml`(토글) + **수집 주제 config**(term-based, 수집 트랙 L1 §009). 수집 주제를 `key_questions.yml` 에 type 필드로 통합할지 별도 config 로 둘지는 L2 확정. `postgres.yml`·`logging.yml` 제거. collector 는 폐기 아니라 DB-free 부활. 모든 config YAML.
 
 ---
 
@@ -123,7 +133,8 @@ a6dd5c3 key_questions.yml 리네임    │ (origin 보다 앞섬)
    - 통합 결정 1개: OpenClaw = **Docker 컨테이너** / ai4ref·`claude` = **호스트** → 컨테이너 cron 이 호스트 작업을 어떻게 발화할지 (호스트 명령 위임 vs ai4ref 도 컨테이너 마운트).
    - 운영 시 `reldate=1`(또는 지난 실행 이후) → 하루 3~4건만 → ~1분.
 2. **KQ 추출 add-on** — Spec Kit(SDD)으로. 지침 → PICO 추출 → 검증 A 로 OR-블록 정련 → `enabled:false` 토글 레코드. (Spec Kit 은 이 add-on 부터 도입 합의)
-3. **정리(audit)** — 템플릿 잔재 청소, `daily_collection.sh` 미완성, 두 Zotero 모듈 응답 파싱 통일(`successful` vs `success`), 하드코딩 DB 접속 등.
+3. **수집 트랙** [신규, L1 §009~011] — 자연어 주제 → 대량검색 → PMC PDF/XML → Gdrive `Zotero_attachments` → Zotero linked_file(Zotfile) + 2nd-brain 직접 참조. collector DB-free 재작성. L2 확정 항목: config 통합/분리(헌법 X), Zotfile 링크 반자동화, PMC OA 한계.
+4. **정리(audit)** — 템플릿 잔재 청소, `daily_collection.sh` 미완성, 두 Zotero 모듈 응답 파싱 통일(`successful` vs `success`), 하드코딩 DB 접속 등.
 
 ## 함정·교훈 (실측 근거)
 
