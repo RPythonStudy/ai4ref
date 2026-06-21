@@ -13,8 +13,8 @@
 uv run python -c "import yaml; from common.query import build_query; \
 r=yaml.safe_load(open('config/key_questions.yml'))['kqs'][0]; print(build_query(r['pico']))"
 ```
-**기대**: 출력이 `recall_baseline.yml` 의 `derived_query` 와 **문자 단위 일치**
-(`(I…) AND (P…)`, C·O 미포함).
+**기대**: 출력이 `recall_baseline.yml` 의 `key_questions[0].derived_query` 와 **문자 단위
+일치**(`(I…) AND (P…)`, C·O 미포함).
 
 ## 2. KQ 로드·검증 (결정론)
 
