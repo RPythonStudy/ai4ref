@@ -54,10 +54,10 @@
 
 ## Phase 6: Polish & 등가 검증
 
-- [ ] T012 [P] `quickstart.md` §1(검색식 파생)·§2(로드)·§4(단위테스트) 실행 통과 확인
-- [ ] T013 recall 참값 재현 — `uv run python -m alert.validate_kq` → 검증 A 8/9·B 2/2 일치 확인
+- [x] T012 [P] `quickstart.md` §1(검색식 파생)·§2(로드)·§4(단위테스트) 실행 통과 확인
+- [x] T013 recall 참값 재현 — `uv run python -m alert.validate_kq` → 검증 A 8/9·B 2/2 일치 확인
   (`recall_baseline.yml`)
-- [ ] T014 [P] 헌법 XI 줄수 점검 — `query.py`·`kq.py` ≤300줄, `*_spec.md` ≤200줄
+- [x] T014 [P] 헌법 XI 줄수 점검 — `query.py`·`kq.py` ≤300줄, `*_spec.md` ≤200줄
 
 ## Dependencies
 
