@@ -38,9 +38,9 @@
 **Independent Test**: 앵커 달린 KQ 로드 시 필드 보존 + 중복 PMID(A∩B) 경고.
 **Depends on**: US1 (`kq.py` 존재) — 동일 파일 확장이라 순차.
 
-- [ ] T008 [US2] `src/common/kq.py` 에 guideline 앵커(name/pmid/date=T)·`guideline_refs`·
+- [x] T008 [US2] `src/common/kq.py` 에 guideline 앵커(name/pmid/date=T)·`guideline_refs`·
   `post_guideline_landmarks` 필드 처리 + 검증규칙 5(A∩B 중복 PMID 경고) 추가 (data-model.md)
-- [ ] T009 [US2] `src/common/kq_spec.md` 에 검증 앵커 규칙·FR-006 매핑 반영
+- [x] T009 [US2] `src/common/kq_spec.md` 에 검증 앵커 규칙·FR-006 매핑 반영
 
 ## Phase 5: User Story 3 — 감시 제어 (P3)
 

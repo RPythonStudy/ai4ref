@@ -11,6 +11,8 @@
 """
 from __future__ import annotations
 
+import re
+import warnings
 from pathlib import Path
 
 import yaml
@@ -25,14 +27,24 @@ DESIGN_STRICTNESS = ("strict", "loose")
 # 저장 금지 필드 — 검색식은 PICO 에서 파생(헌법 III)
 FORBIDDEN_FIELDS = ("query",)
 
+# 검증 앵커 — PMID 리스트 필드(검증 A·B). 둘 다 선택(없으면 채점/포착 제외)
+ANCHOR_LIST_FIELDS = ("guideline_refs", "post_guideline_landmarks")
+
+# guideline.date(=T, 제정 시점) 형식 — YYYY-MM
+_DATE_RE = re.compile(r"^\d{4}-\d{2}$")
+
 
 def validate_kq_record(rec: dict) -> None:
-    """KQ 레코드 1건을 검증(규칙 1~4). 위반 시 ValueError(명확한 메시지).
+    """KQ 레코드 1건을 검증(규칙 1~5). 위반 시 ValueError(명확한 메시지).
 
     1. `kq`·`question_type`·`pico`·`guideline.name` 필수.
     2. `pico.P`·`pico.I` 가 비어있지 않은 리스트.
     3. 검색식 필드(`query` 등) 부재(레코드·pico 양쪽).
     4. `question_type` ∈ enum, `design_strictness` ∈ {strict, loose} 또는 미지정.
+    5. (경고) `guideline_refs` ∩ `post_guideline_landmarks` 중복 PMID = 정의 오류 표면화.
+
+    검증 앵커(`guideline.date`·`guideline_refs`·`post_guideline_landmarks`)는 모두
+    선택 — 있으면 형태(YYYY-MM·PMID 리스트)를 확인하고, 검증 A/B 시간축 분리에 쓰인다.
     """
     if not isinstance(rec, dict):
         raise ValueError(f"KQ 레코드가 dict 가 아님: {type(rec).__name__}")
@@ -71,6 +83,31 @@ def validate_kq_record(rec: dict) -> None:
     if ds is not None and ds not in DESIGN_STRICTNESS:
         raise ValueError(
             f"KQ '{label}' 검증 실패: design_strictness='{ds}' 미허용 (허용: {', '.join(DESIGN_STRICTNESS)} 또는 미지정)")
+
+    # 검증 앵커 — guideline.date(T) 형식(선택)
+    gdate = guideline.get("date")
+    if gdate is not None and not _DATE_RE.match(str(gdate)):
+        raise ValueError(
+            f"KQ '{label}' 검증 실패: guideline.date='{gdate}' 형식 오류 (YYYY-MM 필요)")
+
+    # 검증 앵커 — guideline_refs·post_guideline_landmarks 형태(선택, PMID 리스트)
+    for fld in ANCHOR_LIST_FIELDS:
+        val = rec.get(fld)
+        if val is None:
+            continue
+        if not isinstance(val, (list, tuple)):
+            raise ValueError(
+                f"KQ '{label}' 검증 실패: '{fld}' 는 PMID 리스트여야 함(현재 {type(val).__name__})")
+
+    # 규칙 5 — 검증 A∩B 중복 PMID 경고(차단 아님, 정의 오류 표면화)
+    refs = {str(x) for x in (rec.get("guideline_refs") or [])}
+    landmarks = {str(x) for x in (rec.get("post_guideline_landmarks") or [])}
+    dup = sorted(refs & landmarks)
+    if dup:
+        warnings.warn(
+            f"KQ '{label}': PMID {', '.join(dup)} 가 guideline_refs(A)·"
+            f"post_guideline_landmarks(B) 양쪽에 존재 — T 기준 시간축 모순(정의 확인 필요)",
+            UserWarning, stacklevel=2)
 
 
 def load_kqs(path: str | Path | None = None) -> list[dict]:

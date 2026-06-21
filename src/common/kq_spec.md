@@ -24,8 +24,19 @@
 
 검증 실패 = **차단**: `load_kqs` 가 위반 레코드 인덱스·사유를 담아 `ValueError`.
 
-> 증분 규칙(US2·US3): 검증 앵커 중복 경고(규칙 5)·`design_strictness` 기본 `loose`·
-> `enabled` 기본 처리는 후속 태스크(T008·T010)에서 본 명세에 추가한다.
+## 검증 앵커 규칙 (data-model.md 5, US2 범위, FR-006)
+
+두-검증(검색 recall 참값)의 시간축 분리 앵커를 보유·검증한다 — 모두 **선택** 필드.
+
+5. **A∩B 중복 PMID 경고**: 동일 PMID 가 `guideline_refs`(검증 A, T 이전 근거)와
+   `post_guideline_landmarks`(검증 B, T 이후 랜드마크) 양쪽에 있으면 T 기준 시간축이
+   모순 — `UserWarning` 으로 표면화(**차단 아님**, 정의 오류 점검 유도).
+- **형태 검증(있을 때만)**: `guideline.date` = `YYYY-MM`(=T), `guideline_refs`·
+  `post_guideline_landmarks` = PMID 리스트. 형태 위반은 차단(`ValueError`).
+- 앵커는 검색식·게이트에 직접 쓰이지 않음 — 검증 A/B(`validate_kq`)의 참값일 뿐.
+
+> 증분 규칙(US3): `design_strictness` 기본 `loose`·`enabled` 기본 처리·`question_type`
+> enum·`collection` 통과는 후속 태스크(T010)에서 본 명세에 추가한다.
 
 ## 단일 출처 (헌법 XVI)
 
@@ -39,5 +50,5 @@
 
 ## 관련 FR
 
-- FR-001 KQ 정의 · FR-002·FR-003 PICO/파생 입력 · FR-007 감시 제어 속성(검증) ·
-  FR-009 config 확장만으로 KQ 추가(코드 변경 0)
+- FR-001 KQ 정의 · FR-002·FR-003 PICO/파생 입력 · FR-006 두-검증 앵커 보유·정합 ·
+  FR-007 감시 제어 속성(검증) · FR-009 config 확장만으로 KQ 추가(코드 변경 0)
