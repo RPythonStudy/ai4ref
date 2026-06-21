@@ -41,6 +41,7 @@
 - 로거: `pyproject` slim deps 기조 → 표준 `logging` + stderr 폴백으로 단순화(logger.py·logging.yml 재작성 안 함).
 
 ### DISCARD (cruft 전량)
+> ✅ **실행 완료 (2026-06-22)**: 아래 대부분 삭제됨(template·R·Quarto·빌드산출물 docs/site_libs 1.7M·wiki 서브모듈·Makefile·scripts·DB코드·logger.py·logging.yml·죽은 tests). **`src/collector/*` 는 보류**(수집 트랙 부활 예정). 로깅 = `features.py` stderr 폴백으로 유지. 복구 = `archive/mvp-pre-speckit` 태그·git 이력.
 - 템플릿: `_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock` (※ `README.md` 는 DISCARD 아님 → L1 명세로 재작성)
 - R 트랙: `src/R/`·`src/Rlib/`·`src/preprocessor/`·`src/summerizer/`
 - DB·R 인프라: `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml}`
