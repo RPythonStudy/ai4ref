@@ -12,6 +12,41 @@
 검색 → 게이트(claude_cli) → sink(telegram·zotero). 최근 30일 96건 백필 깨끗(FP 0, 진짜 관련 1건 알림).
 **남은 것 = OpenClaw cron(자율 일일 발화) 하나.**
 
+## 🔄 새출발 계획 (Spec Kit, 2026-06-21 결정)
+
+**결정**: ai4ref 의 기존 코드는 대부분 cruft(템플릿 fork·collector·Quarto/R). **cruft 버리고 Spec Kit 으로 새출발**하되, *작동·검증된 alert MVP 는 다시 짜지 말고 **포팅(복사)***. (재작성은 검증 8/9·게이트 캘리브레이션을 날리는 오버 → 금지)
+
+**백업 완료**: git tag `archive/mvp-pre-speckit`(@039f36c) · `~/projects/ai4ref-archive-2026-06-21.tar.gz` · 원격 `RPythonStudy/ai4ref`.
+
+### PORT (복사할 작동 MVP)
+- `config/{key_questions.yml, features.yml}`
+- `src/notify/` 전체 (base·registry·stdout_sink·telegram_sink·zotero_sink)
+- `src/alert/` (run·llm_gate·validate_kq·classify_qtype)
+- `src/common/` (features·pubmed·query·state)
+- `.env`(시크릿) · `.gitignore` · 이 문서들(HANDOFF·CLAUDE)
+
+### EXTRACT (작은 리팩터)
+- `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import → **`common/zotero.py` 로 추출**(collector 폐기 후에도 동작). import 경로 수정.
+- 로거: `features.py` 가 fail-soft 로 `common.logger` 시도 → 없으면 stderr 폴백. 일단 폴백 유지(logger.py·logging.yml 포팅 보류).
+
+### DISCARD (cruft 전량)
+- 템플릿: `README.md`(rpy-quarto-template fork)·`_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock`
+- R 트랙: `src/R/`·`src/Rlib/`·`src/preprocessor/`·`src/summerizer/`
+- collector 파이프라인: `src/collector/*`(zotero 함수 추출 후), `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml, legacy_collections.yml}`
+- 오케스트레이션: `Makefile`·`Makefile_project`·`scripts/`
+- 패키징: `requirements.txt`(flat freeze) → **`pyproject.toml`(uv·src layout·slim deps: pyyaml·python-dotenv·requests·pyzotero)**
+
+### Spec Kit 실행 순서 (fresh ai4ref 세션에서)
+```
+1. 백업 확인 (위) → cruft DISCARD + zotero EXTRACT + pyproject.toml 작성
+2. uvx --from git+https://github.com/github/spec-kit.git specify init --here --ai claude
+3. /speckit.constitution  — §불변 설계 결정(아래)을 헌법으로 박제
+4. /speckit.specify "현행 alert 감시 파이프라인" — 포팅한 MVP retro-spec(기존 동작 문서화)
+5. /speckit.specify — KQ 추출 add-on(지침→PICO→검증A 정련→토글) 부터 신규
+6. 포팅 무손상 확인: validate_kq → 8/9·2/2 / 게이트 → RELIEF 🎯·FP 거부
+```
+> **OpenSpec 은 ai4ref 엔 불필요**(유지할 브라운필드 없음). Dr. Ben 의 *살아있는 다른 프로젝트*(radsafety-pwa 등) 유지보수엔 OpenSpec. (조사 근거: vault `03_resources/AI-agents/2026-06-21_딥리서치_SDD-1인개발자-유지보수전략.md`)
+
 ## 빠른 시작
 
 ```bash
