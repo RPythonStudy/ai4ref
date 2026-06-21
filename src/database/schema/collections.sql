@@ -4,7 +4,7 @@ CREATE TABLE collections (
     parent_id INTEGER REFERENCES collections(id) ON DELETE CASCADE,  -- 상위 컬렉션(트리구조)
     
     -- 검색 설정 정보
-    search_term TEXT,                     -- PubMed 검색어 (search_collections.json의 term)
+    search_term TEXT,                     -- PubMed 검색어 (kq_anchors.yml의 term)
     retmax INTEGER DEFAULT 10000,        -- 최대 검색 결과 수
     enabled BOOLEAN DEFAULT TRUE,        -- 활성화 여부
     

@@ -14,8 +14,9 @@ dedup 은 seen-set 이 권위 — edat 창은 재조회량을 줄이는 효율 �
 """
 import os
 import sys
-import json
 import argparse
+
+import yaml
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))   # src/ 를 import 경로에
 
@@ -39,11 +40,11 @@ def _demo_candidates() -> list:
 
 
 def _load_kqs() -> list:
-    """search_collections.json 에서 감시 대상 KQ(enabled + term + guideline)만."""
-    path = project_root() / "config" / "search_collections.json"
-    data = json.loads(path.read_text(encoding="utf-8"))
+    """kq_anchors.yml 에서 감시 대상 KQ(enabled + term + guideline)만."""
+    path = project_root() / "config" / "kq_anchors.yml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     out = []
-    for r in data.get("search_collections", []):
+    for r in data.get("kqs", []):
         if r.get("enabled") and r.get("term") and r.get("guideline"):
             out.append(r)
     return out
@@ -53,7 +54,7 @@ def _collect_candidates(features, reldate: int = 30, limit: int = None) -> list:
     """PubMed 증분 검색 → efetch(제목·초록) → 후보 LandmarkItem 목록."""
     kqs = _load_kqs()
     if not kqs:
-        log.warning("[collect] 감시 KQ 없음 (search_collections.json: enabled+term+guideline 필요)")
+        log.warning("[collect] 감시 KQ 없음 (kq_anchors.yml: enabled+term+guideline 필요)")
         return []
     items = []
     for kq in kqs:

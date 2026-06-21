@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ai4ref — search_collections.json KQ 레코드 검증 (수정 개념 MVP)
+ai4ref — kq_anchors.yml KQ 레코드 검증 (수정 개념 MVP)
 ================================================================
   [0단계] 사용자가 입력한 question_type ↔ classify_qtype 보조 제안 대조 (결정형 검증)
   [검증 A] term(검색식)이 guideline_refs(지침 근거)를 재현하나 (relative recall)
@@ -8,6 +8,7 @@ ai4ref — search_collections.json KQ 레코드 검증 (수정 개념 MVP)
 """
 from __future__ import annotations
 import os, sys, json, time, urllib.parse, urllib.request
+import yaml
 sys.path.insert(0, os.path.dirname(__file__))
 from classify_qtype import classify_question_type
 
@@ -25,8 +26,8 @@ def esearch_count(term: str, mindate: str | None = None, maxdate: str | None = N
     return int(d["esearchresult"]["count"])
 
 def main():
-    cfg = os.path.join(os.path.dirname(__file__), "..", "..", "config", "search_collections.json")
-    recs = json.load(open(cfg, encoding="utf-8"))["search_collections"]
+    cfg = os.path.join(os.path.dirname(__file__), "..", "..", "config", "kq_anchors.yml")
+    recs = yaml.safe_load(open(cfg, encoding="utf-8"))["kqs"]
     checked = 0
     for r in recs:
         if not r.get("guideline_refs"):

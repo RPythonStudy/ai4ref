@@ -1,12 +1,12 @@
 
-import json
+import yaml
 from pathlib import Path
 from common.database import get_db_connection
 
 def load_search_collections():
-    json_path = Path("config/search_collections.json")
-    with open(json_path, "r", encoding="utf-8") as f:
-        collections = json.load(f)["search_collections"]
+    cfg_path = Path("config/kq_anchors.yml")
+    with open(cfg_path, "r", encoding="utf-8") as f:
+        collections = yaml.safe_load(f)["kqs"]
     conn = get_db_connection()
     cur = conn.cursor()
     for table in ["paper_collection", "collection_pmid", "unique_pmid", "filtered_pmid", "collections"]:
