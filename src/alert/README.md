@@ -4,7 +4,7 @@ KQ(Key Question)마다 *검색 전략을 설정파일에 미리 구성*해 두�
 문헌에서 **지침을 바꿀 랜드마크**를 골라 알림·보관한다.
 
 ```
-[KQ 앵커] kq_pico_collection.yml (term·guideline·검증셋, 미리 구성)
+[KQ 앵커] key_questions.yml (term·guideline·검증셋, 미리 구성)
    └ PubMed 증분 검색(edat reldate, pdat≥T)  ── 결정론
         └ 1차 기계 필터(날짜·중복·언어)          ── 결정론
              └ efetch(제목·초록)
@@ -31,7 +31,7 @@ python src/alert/validate_kq.py
 
 ## 설정 (단일 정본)
 
-- **`config/kq_pico_collection.yml`** — KQ 앵커 레코드(진료지침 감시 + 일반 수집 통합).
+- **`config/key_questions.yml`** — KQ 앵커 레코드(진료지침 감시 + 일반 수집 통합).
   `guideline` 있는 레코드 = 감시 KQ(두-검증). 구 `alert_anchors.yml` 은 여기로 통합·폐기(2026-06-21).
   - `kq·question_type·pico·term·guideline{name,pmid,date=T}·guideline_refs(검증A)·post_guideline_landmarks(검증B)·enabled`
 - **`config/features.yml`** — 기능/싱크 토글 (alert·notify.{stdout,telegram,zotero}·llm_backend·state).

@@ -3,7 +3,7 @@
 # [아카이브 · LEGACY] collector(대량 수집) 전용 term-based 검색 컬렉션 (2025-08 시드).
 #   감시 트랙(PICO operative)이 아닌, 단순 주제 *대량 수집*용 옛 시드.
 #   비임상 AI 주제라 PICO 틀(P·I·C·O)에 안 맞아 검색식(term)을 직접 사용 → 유지보수 안 함.
-#   현행 감시 KQ(PICO operative)는 config/kq_pico_collection.yml.
+#   현행 감시 KQ(PICO operative)는 config/key_questions.yml.
 #   읽는 곳: src/collector/load_collections.py (대량 수집 파이프라인).
 # ───────────────────────────────────────────────────────────────────────────────
 
