@@ -22,8 +22,13 @@
 
 **헌법 초안 준비됨**: `docs/constitution-draft.md` — Spec Kit init 후 `/speckit.constitution` 입력으로 그대로 투입(형식만 v0.11.3 템플릿에 정렬). cortex-kit 헌법(V~XII·부가) 흡수 + 본 §불변 설계 결정 1~10.
 
+### 명세 3계층 (cortex-kit 차용)
+- **L1** = `README.md`(기능 카탈로그) + `docs/*.md`(횡단 설계). ← rpy-quarto-template README 를 *삭제 말고* L1 으로 재작성.
+- **L2** = `specs/<NNN-feature>/`(Spec Kit `/speckit.*` 산출물).
+- **L3** = 코드 옆 `<모듈>_spec.md`(예: `llm_gate.py` ↔ `llm_gate_spec.md`). Spec Kit 자동생성 아님 = 수작업, 코드와 동일 커밋 동기. (헌법 XI)
+
 ### REBUILD (명세-우선 신규 재작성 — 기존 코드는 *참조용*, 복사 금지)
-아래는 재작성 **범위**(기능 단위)다. 기존 파일을 그대로 옮기지 말고, `_spec.md` 먼저 → 구현 → 검증 참값 통과 순으로 새로 짠다.
+아래는 재작성 **범위**(기능 단위)다. 기존 파일을 그대로 옮기지 말고, L3 `<모듈>_spec.md` 먼저 → 구현 → 검증 참값 통과 순으로 새로 짠다.
 - config: `key_questions.yml`(PICO OR-블록·두-검증 = 검증 참값) · `features.yml`(토글) — *값은 참값으로 보존, 스키마는 재정의 가능*
 - `notify/` (base·registry·stdout·telegram·zotero sink) — Sink 플러그 모양(헌법 VIII·XII 의 유일 허용 상속)
 - `alert/` (run·llm_gate·validate_kq·classify_qtype) — 결정론 backbone + 게이트 2단계
@@ -35,7 +40,7 @@
 - 로거: `pyproject` slim deps 기조 → 표준 `logging` + stderr 폴백으로 단순화(logger.py·logging.yml 재작성 안 함).
 
 ### DISCARD (cruft 전량)
-- 템플릿: `README.md`(rpy-quarto-template fork)·`_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock`
+- 템플릿: `_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock` (※ `README.md` 는 DISCARD 아님 → L1 명세로 재작성)
 - R 트랙: `src/R/`·`src/Rlib/`·`src/preprocessor/`·`src/summerizer/`
 - collector 파이프라인: `src/collector/*`(zotero 로직은 `common/zotero.py` 로 신규 재작성), `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml, legacy_collections.yml}`
 - 오케스트레이션: `Makefile`·`Makefile_project`·`scripts/`
@@ -46,7 +51,8 @@
 0. 검증 참값 추출·고정: validate_kq golden PMID, key_questions.yml 의 PICO OR-리스트,
    게이트 기대판정(RELIEF🎯·FP 거부)을 acceptance 참값 파일로 박제 (재작성 등가 판정 기준)
 1. 백업 확인 (위) → cruft DISCARD + pyproject.toml 작성
-2. uvx --from git+https://github.com/github/spec-kit.git@v0.11.3 specify init --here --ai claude
+2. uvx --from git+https://github.com/github/spec-kit.git@v0.11.3 specify init --here --integration claude --script sh --force
+   ⚠️ v0.11.3 문법 = `--integration claude` (구 v0.4.1 의 `--ai claude` 아님). `--force` = 비어있지 않은 현재 디렉토리에 merge.
    ⚠️ 버전 고정 필수. 무고정(@없음)은 main HEAD(미릴리스)를 끌어옴. 최신 릴리스 = v0.11.3(2026-06-19).
    (cortex 는 v0.4.1 로 init 됨 → 템플릿 골격 다름. ai4ref 는 v0.11.3 기준으로 통일)
 3. /speckit.constitution  — docs/constitution-draft.md 내용 투입(v0.11.3 템플릿 형식에 정렬)

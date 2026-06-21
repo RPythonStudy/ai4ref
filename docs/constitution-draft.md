@@ -56,11 +56,18 @@ collector 폐기 후 `legacy_collections.yml`·`postgres.yml`·`logging.yml` 는
 
 ## Part B. 엔지니어링 규율 (Cortex-Kit 계승 · ai4ref 보정)
 
-### XI. Collocated Spec (명세 동거)
-모든 코드는 코드 옆 `_spec.md` 동거를 원칙으로 한다. 각 파일은 단일 관심사,
-200줄 상한. `.specify/` = 헌법·템플릿, Spec Kit `specs/<feature>/` = 피처-레벨
-(L1~L2) 명세, `_spec.md` = 파일-레벨(L3). 예외 없음 — 기존 alert 로직도
-명세-우선으로 새로 작성한다.
+### XI. Collocated Spec (3계층 명세 — cortex-kit 차용)
+명세는 3계층으로 둔다(cortex-kit 실증 구조):
+- **L1 (프로젝트)** = `README.md` 의 기능 카탈로그(번호 기능 + 입력/출력/제약) +
+  횡단 설계 `docs/*.md`. rpy-quarto-template fork README 는 **삭제가 아니라 L1 으로 재작성**.
+- **L2 (피처)** = `specs/<NNN-feature>/`(Spec Kit 산출물: spec·plan·data-model·
+  research·tasks·analysis). `/speckit.*` 명령으로 생성·관리.
+- **L3 (컴포넌트)** = 코드 옆 동거 `<모듈>_spec.md`(예: `orchestrator.py` ↔
+  `orchestrator_spec.md`). 헤더에 모듈·테스트·L2 참조(FR 번호), 공개 인터페이스 표.
+  Spec Kit 이 자동생성하지 않는 **수작업 규율** — 코드와 동일 커밋에 동기화(원칙 XVI).
+
+각 파일은 단일 관심사, 200줄 상한. `.specify/` = 헌법·템플릿(생성 영역). 예외 없음
+— 기존 alert 로직도 L3 명세-우선으로 새로 작성한다.
 
 ### XII. Procedural Clarity (절차적 명확성)
 절차적/함수형 파이프라인을 지향한다. 과도한 Class 상속·Decorator 추상화 금지.
