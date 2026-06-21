@@ -20,7 +20,7 @@
 
 **백업 완료**: git tag `archive/mvp-pre-speckit`(@039f36c) · `~/projects/ai4ref-archive-2026-06-21.tar.gz` · 원격 `RPythonStudy/ai4ref`.
 
-**헌법 초안 준비됨**: `docs/constitution-draft.md` — Spec Kit init 후 `/speckit.constitution` 입력으로 그대로 투입(형식만 v0.11.3 템플릿에 정렬). cortex-kit 헌법(V~XII·부가) 흡수 + 본 §불변 설계 결정 1~10.
+**헌법 비준 완료**: `.specify/memory/constitution.md` (v1.2.0) — cortex-kit 헌법(V~XII·부가) 흡수 + 본 §불변 설계 결정 1~10. (초안 `docs/constitution-draft.md` 는 비준 후 삭제)
 
 ### 명세 3계층 (cortex-kit 차용)
 - **L1** = `.specify/memory/system-spec.md`(기능 카탈로그·입력/출력/제약, agent 컨텍스트 정본) + `docs/*.md`. 루트 `README.md` 는 **사용자용**(소개·Quickstart)으로 분리 — agent 컨텍스트엔 README 대신 system-spec·constitution.
@@ -34,7 +34,7 @@
 - **감시 트랙** `alert/` (run·llm_gate·validate_kq·classify_qtype) — 결정론 backbone + 게이트 2단계 (L1 §001~008)
 - **수집 트랙** `collect/` [신규] — 주제 수집 정의·대량검색·PMC PDF/XML 다운로드·Zotero linked_file·2nd-brain 직접 참조 (L1 §009~011). **기존 `collector/` 의 esearch·efetch·pmc_downloader·zotero_add 를 postgres 제거(DB-free)하여 재활용**
 - `common/` (features·pubmed·query·state·**zotero**) — 양 트랙 공유
-- `.env`(시크릿)·`.gitignore`·이 문서들(HANDOFF·CLAUDE·constitution-draft) = 그대로 이어씀
+- `.env`(시크릿)·`.gitignore`·이 문서들(HANDOFF·CLAUDE·README·.specify) = 그대로 이어씀
 
 ### 재작성 시 합칠 것 (기존의 부채를 신규에 반영)
 - zotero 헬퍼: 기존엔 `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import. 신규는 **`common/zotero.py` 단일 출처**로 작성(헌법 XVI No Duplication) → 감시(zotero sink)·수집(linked_file 배포) 양 트랙이 공유. `zotero_add.py` 는 이미 DB-free 라 로직 재활용 용이.
@@ -59,7 +59,7 @@
    ⚠️ v0.11.3 문법 = `--integration claude` (구 v0.4.1 의 `--ai claude` 아님). `--force` = 비어있지 않은 현재 디렉토리에 merge.
    ⚠️ 버전 고정 필수. 무고정(@없음)은 main HEAD(미릴리스)를 끌어옴. 최신 릴리스 = v0.11.3(2026-06-19).
    (cortex 는 v0.4.1 로 init 됨 → 템플릿 골격 다름. ai4ref 는 v0.11.3 기준으로 통일)
-3. /speckit.constitution  — docs/constitution-draft.md 내용 투입(v0.11.3 템플릿 형식에 정렬)
+3. /speckit-constitution  — 헌법 비준 (✅ 완료: .specify/memory/constitution.md v1.2.0)
 4. /speckit.specify — 현행 alert 감시 파이프라인 retro-spec(기존 동작 = 검증 참값을 명세로)
 5. /speckit.specify — KQ 추출 add-on(지침→PICO→검증A 정련→토글) 부터 신규
 6. 검증 참값 재현 확인(등가 판정): validate_kq → 8/9·2/2 / 게이트 → RELIEF 🎯·FP 거부

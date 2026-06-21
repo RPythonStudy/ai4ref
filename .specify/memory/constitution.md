@@ -13,7 +13,7 @@ Sync Impact Report
   - Operational Standards
   - Development Workflow
   - Governance
-- 권위 원본: docs/constitution-draft.md (cortex-kit 헌법 V~XII·부가 흡수 + HANDOFF 불변 결정 1~10)
+- 출처: cortex-kit 헌법 V~XII·부가 흡수 + HANDOFF 불변 결정 1~10 (초안 docs/constitution-draft.md 는 비준 후 삭제 — 이 문서가 정본)
 - Templates requiring updates:
   - .specify/templates/plan-template.md ✅ — "Constitution Check" 게이트가 헌법을 동적 참조(범용), 하드코딩 없음
   - .specify/templates/spec-template.md ✅ — 원칙 하드코딩 없음, 충돌 없음
