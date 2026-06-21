@@ -109,14 +109,18 @@
 
 011. **자산 배포 (Asset Distribution: Zotero + 2nd-brain)** [신규] — 수집 자산을 보관처와
    지식 베이스로 배포한다.
-   - **Zotero**: 지정 컬렉션 생성·적재(`zotero_add`, DB-free). PDF 는 `Zotero_attachments`
-     의 파일을 가리키는 **linked 첨부**로 연결(Zotero storage import 아님 → Gdrive 단일 출처).
+   - **Zotero**: ai4ref 가 Web API(`zotero_add`, DB-free)로 ① 서지 레코드 생성·지정 컬렉션
+     적재 ② PDF 를 `Zotero_attachments` 에 Zotfile 명명(`<저자> 등 - <연도> - <제목>.pdf`)으로
+     배치까지 자동. **linked_file(linkMode=2) 연결은 Web API 로 생성 불가** → 로컬 Zotero
+     클라이언트의 Zotfile "Attach Link to File"(수동/배치) 한 단계로 완성. 기존 275건과 동일
+     모델(Gdrive 단일 출처·풀텍스트 색인).
    - **2nd-brain**: 사본을 만들지 않는다. `Zotero_attachments` 의 PDF·로컬 XML 을
      **직접 참조**하는 포인터(파일 경로·메타 manifest/stub 노트)를 2nd-brain 에 전달 →
      brainify 가 해당 파일을 in-place 로 파싱·PARA 분류·LLM 인식(로컬/OAuth).
-   *입력: Zotero_attachments PDF·로컬 XML 경로 + 메타 → 출력: Zotero 컬렉션(linked) +
-   2nd-brain 참조 노트(in-place)*
-   *제약: 사본 금지(단일 출처 = Gdrive). 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지).*
+   *입력: Zotero_attachments PDF·로컬 XML 경로 + 메타 → 출력: Zotero 서지+컬렉션(+Zotfile
+   linked) + 2nd-brain 참조 노트(in-place)*
+   *제약: 사본 금지(단일 출처 = Gdrive). linked_file 최종 연결 = 클라이언트 Zotfile 단계
+   (Web API 한계, 비headless). 2nd-brain LLM 호출은 brainify 책임(추가비용 0 유지).*
 
 ---
 
