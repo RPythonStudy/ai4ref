@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))   # src/ 를 i
 from common.features import load_features, is_enabled, log, project_root   # noqa: E402
 from common.state import SeenStore                                  # noqa: E402
 from common.pubmed import esearch, efetch_meta                      # noqa: E402
+from common.query import build_query                                # noqa: E402
 from notify.base import LandmarkItem                                # noqa: E402
 from notify.registry import build_sinks, fan_out                    # noqa: E402
 from alert.llm_gate import judge                                    # noqa: E402
@@ -45,7 +46,7 @@ def _load_kqs() -> list:
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     out = []
     for r in data.get("kqs", []):
-        if r.get("enabled") and r.get("term") and r.get("guideline"):
+        if r.get("enabled") and r.get("pico") and r.get("guideline"):
             out.append(r)
     return out
 
@@ -58,7 +59,7 @@ def _collect_candidates(features, reldate: int = 30, limit: int = None) -> list:
         return []
     items = []
     for kq in kqs:
-        term, T = kq["term"], kq["guideline"]["date"]
+        term, T = build_query(kq["pico"]), kq["guideline"]["date"]   # PICO P·I → 검색식
         Ty = int(T[:4])
         term_dated = f"({term}) AND ({Ty + 1}:3000[dp])"            # 지침 이후(pdat)
         pmids = esearch(term_dated, datetype="edat", reldate=reldate)   # 최근 색인(edat)
@@ -108,11 +109,13 @@ def run(demo: bool = False, collect_only: bool = False,
     state_path = (features.get("state", {}) or {}).get("path", "state/alerted.jsonl")
     seen = SeenStore(state_path)
 
-    # KQ → 현행 지침 라벨 (게이트 프롬프트에 '무엇과 다른가' 기준 제공)
-    gl_map = {}
+    # KQ → 현행 지침 라벨 + C·O 필터 기준 (게이트에 전달)
+    gl_map, co_map = {}, {}
     for kq in _load_kqs():
         g = kq.get("guideline", {})
         gl_map[kq["kq"]] = f"{g.get('name','')} ({g.get('date','')})".strip()
+        pico = kq.get("pico", {})
+        co_map[kq["kq"]] = (pico.get("C", ""), pico.get("O", ""))
 
     candidates = _demo_candidates() if demo else _collect_candidates(features, reldate=reldate, limit=limit)
 
@@ -121,9 +124,10 @@ def run(demo: bool = False, collect_only: bool = False,
         if seen.is_seen(c.key):
             skipped += 1
             continue
+        C, O = co_map.get(c.kq, ("", ""))
         verdict = judge(
             {"title": c.title, "abstract": c.abstract},
-            {"kq": c.kq, "guideline": gl_map.get(c.kq, "")},
+            {"kq": c.kq, "guideline": gl_map.get(c.kq, ""), "comparison": C, "outcome": O},
             backend=backend,
         )
         if not verdict.get("is_landmark"):

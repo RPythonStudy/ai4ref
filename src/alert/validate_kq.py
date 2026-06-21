@@ -10,7 +10,9 @@ from __future__ import annotations
 import os, sys, json, time, urllib.parse, urllib.request
 import yaml
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from classify_qtype import classify_question_type
+from common.query import build_query
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
@@ -42,12 +44,13 @@ def main():
         # 시간축 (T = 지침 제정 시점) — 있으면 A=T이전 / B=T이후 윈도우
         T = (r.get("guideline") or {}).get("date")          # "YYYY-MM" or None
         Ty = int(T[:4]) if T else None
+        query = build_query(r["pico"])                       # PICO P·I → 검색식 (파생)
 
         # [검증 A] 검색식이 지침 근거(T 이전)를 재현하나
         pmids = r["guideline_refs"]
         hit = 0
         for pmid in pmids:
-            term = f"({r['term']}) AND {pmid}[uid]"
+            term = f"({query}) AND {pmid}[uid]"
             ok = (esearch_count(term, "1900/01/01", f"{Ty}/12/31") if Ty else esearch_count(term)) >= 1
             hit += ok
             print(f"    {'✅' if ok else '❌'} {pmid}")
@@ -58,7 +61,7 @@ def main():
         if lms and Ty:
             bhit = 0
             for pmid in lms:
-                ok = esearch_count(f"({r['term']}) AND {pmid}[uid]", f"{Ty + 1}/01/01", "2030/12/31") >= 1
+                ok = esearch_count(f"({query}) AND {pmid}[uid]", f"{Ty + 1}/01/01", "2030/12/31") >= 1
                 bhit += ok
                 print(f"    {'✅' if ok else '❌'} {pmid}  (landmark)")
             print(f"  [검증 B] 랜드마크 포착 = {bhit}/{len(lms)}")

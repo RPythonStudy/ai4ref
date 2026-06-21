@@ -1,110 +1,64 @@
 # config/kq_pico_collection.yml
 # ═══════════════════════════════════════════════════════════════════════════════
-# KQ-PICO 컬렉션 — 단일 정본 (진료지침 감시 + 일반 수집 통합)
-#   KQ(Key Question) 중심 레코드. 각 KQ가 검색식·검증셋·Zotero 컬렉션을 정의한다.
-#   guideline 있으면 = 감시 KQ(두-검증), 없으면 = 일반 수집(collector 전용).
-#   (구 alert_anchors.yml·search_collections.json 통합 2026-06-21)
+# KQ-PICO 컬렉션 — 진료지침 기반 신규문헌 감시 (단일 전략: PICO operative)
+#
+# 전략: KQ 마다 PICO 를 정의하고 —
+#   · P·I = 검색식  (term 자동 생성: (I) AND (P))      ← 결정론, 넓은 그물
+#   · C·O = 필터 기준 (스크리닝 게이트가 판정)          ← 추론, 좁혀 거르기
+#   → 검색식을 손으로 짜지 않는다. PICO 가 단일 진실, 검색식은 P·I 에서 파생.
+#     (구 전략: term 을 직접 손으로 작성 → 폐기)
 #
 # 필드:
 #   kq                        KQ 주제 (이 레코드의 중심)
-#   question_type             intervention | diagnostic | prognostic | predictive | general
-#                             0단계: 사용자가 결정형으로 입력 = 권위 (classify_qtype.py 는 보조 제안)
-#   pico {P,I,C,O}            함정회피: P 좁게 · I/C/O 개방 (O 색인누락 → 스크리닝서 판정)
-#   term                      검색식 (PubMed)
+#   question_type             intervention | diagnostic | prognostic | predictive
+#   pico:
+#     P  (검색 블록)          대상·병태 — 검색식 P 블록 (MeSH/tiab, OR 로 연결)
+#     I  (검색 블록)          중재/검사 — 검색식 I 블록 (MeSH/tiab)
+#     C  (필터 기준)          대조 — 보통 개방. 게이트 참고
+#     O  (필터 기준)          결과 — 색인 누락 위험 → 검색식 제외, 게이트서 판정
 #   guideline {name,pmid,date=T}   감시 대상 지침 (date = T, 제정 시점)
 #   guideline_refs            검증 A: T 이전 지침 근거문헌 (재현해야 = recall)
 #   post_guideline_landmarks  검증 B: T 이후 practice-changing 랜드마크 (포착해야)
-#   collection / retmax       collector(수집)용
-#   enabled                   사용/감시 여부 토글
+#   collection                Zotero 컬렉션명 (랜드마크 보관처)
+#   enabled                   감시 여부 토글
+#
+# (구 일반 수집 KQ 는 config/legacy_collections.yml 로 아카이브 — collector 전용·term-based)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 kqs:
 
-  # ── 감시 KQ (두-검증) ────────────────────────────────────────────────────────
   - kq: "주요 복부수술 환자에서 수술전후 수액 전략의 효과"
     question_type: intervention
-    qtype_source: user
     pico:
-      P: "major/elective abdominal(colonic) surgery"
-      I: "(open) perioperative fluid strategy — restrictive / goal-directed"
-      C: "(open) liberal / standard"
-      O: "complications, AKI, LOS (검색식 제외 — 스크리닝서 검증)"
-    # 검색식 v3 (검증 A 로 확정: recall 8/9). P·도메인만; 설계·O 개방. 노이즈는 AI 선별이 처리.
-    term: >-
-      (("Fluid Therapy"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab]
-      OR fluid balance[tiab] OR fluid responsiveness[tiab] OR goal-directed[tiab]
-      OR "goal directed"[tiab] OR "intravascular volume"[tiab] OR "central venous"[tiab])
-      AND (surgery[tiab] OR surgical[tiab] OR perioperative[tiab] OR abdominal[tiab]
-      OR "Surgical Procedures, Operative"[Mesh]))
+      # P·I = 검색식으로 (넓은 그물). C·O = 게이트 필터로 (좁혀 거르기).
+      P: >-
+        surgery[tiab] OR surgical[tiab] OR perioperative[tiab] OR abdominal[tiab]
+        OR "Surgical Procedures, Operative"[Mesh]
+      I: >-
+        "Fluid Therapy"[Mesh] OR fluid therapy[tiab] OR fluid management[tiab]
+        OR fluid balance[tiab] OR fluid responsiveness[tiab] OR goal-directed[tiab]
+        OR "goal directed"[tiab] OR "intravascular volume"[tiab] OR "central venous"[tiab]
+      C: "대조: liberal / standard fluid (개방 — 검색식 제외)"
+      O: "결과: 합병증 · AKI · LOS (색인 누락 위험 → 검색식 제외, 게이트서 판정)"
     guideline:
       name: "ERAS 2012 elective colonic surgery — 수술전후 수액 관리 권고"
       pmid: "23099039"        # Gustafsson 2012, Clin Nutr
       date: "2012-12"         # T (제정 시점)
-    # 검증 A (T 이전): 지침 수액 권고 근거문헌 — 시스템이 재현해야. 측정 2026-06-20 = 8/9.
+    # 검증 A (T 이전): recall 8/9 (2026-06-20). P·I 검색식이 지침 근거를 재현.
     guideline_refs:
       - "20515521"   # Varadhan/Lobo — IV fluid 메타분석
       - "19519723"   # Bundgaard — liberal vs restrictive
       - "19837807"   # Giglio — goal-directed 혈역학 메타
       - "19934912"   # Senagore — 복강경 colectomy GDT RCT
-      - "19602972"   # Marik — arterial waveform (ICU ventilated; 간접근거 → 검색 한계로 누락, 정직한 천장)
+      - "19602972"   # Marik — arterial waveform (ICU; 간접근거 → 검색 한계 누락, 정직한 천장)
       - "21173294"   # Futier — goal-directed vs restrictive RCT
       - "16356220"   # Pearse — central venous saturation
       - "14739801"   # Holte — epidural·intravascular volume
       - "19302633"   # Soni — GIFTASUP 합의
-    # 검증 B (T 이후): 지침 이후 practice-changing 랜드마크 — alert 가 포착해야. 측정 2026-06-20 = 2/2.
+    # 검증 B (T 이후): 포착 2/2 (2026-06-20).
     post_guideline_landmarks:
-      - "29742967"   # RELIEF (Myles, NEJM 2018) — near-zero 권고 뒤집음 → ERAS 2025 변경 유발
+      - "29742967"   # RELIEF (Myles, NEJM 2018) — near-zero 권고 뒤집음
       - "24842135"   # OPTIMISE (Pearse, JAMA 2014) — goal-directed, major GI surgery
     collection: eras-fluid-abdominal
-    retmax: 1000
     enabled: true
     created_date: "2026-06-20"
-
-  # ── 일반 수집 KQ (guideline 없음 → collector 전용) ──────────────────────────
-  - kq: "생성형AI를 이용한 EMR 가명화 및 비정형데이터 정형화"
-    question_type: general
-    qtype_source: user
-    term: >-
-      ((generative AND AI) OR ChatGPT OR Claude OR Gemini OR (large AND language AND model) OR LLM)
-      AND ((EMR OR EHR OR (electronic AND medical AND record) OR (electronic AND health AND record)
-      OR (health AND information) OR (medical AND information) OR (healthcare AND data) OR (clinical AND data))
-      AND ((de-identification OR deidentification OR anonymization OR pseudonymization)
-      OR (data AND masking) OR (privacy AND protection))
-      AND ((unstructured AND data) OR (clinical AND text) OR (medical AND text) OR (free AND text))
-      AND ((structured AND data) OR normalization OR standardization OR (data AND transformation)))
-    collection: ai-emr-pseudo-structuring
-    description: "생성형AI를 이용한 EMR 가명화 및 비정형데이터 정형화"
-    retmax: 10
-    enabled: true
-    created_date: "2025-08-09"
-
-  - kq: "생성형AI를 이용한 논문작성 자동화"
-    question_type: general
-    qtype_source: user
-    term: >-
-      (generative AND AI) OR ChatGPT OR Claude OR Gemini OR DeepSeek OR LLaMA OR PaLM
-      OR (large AND language AND model) AND (manuscript AND writing) OR (research AND writing)
-      OR (scientific AND writing) OR (academic AND writing) OR (paper AND writing)
-      OR (article AND writing) OR (publication AND writing)
-    collection: ai-auto-manuscripting
-    description: "생성형AI를 이용한 논문작성 자동화"
-    retmax: 10
-    enabled: true
-    created_date: "2025-08-09"
-
-  - kq: "생성형AI 텍스트 정형화 시 환각현상 극복방법"
-    question_type: general
-    qtype_source: user
-    term: >-
-      ((generative AND AI) OR ChatGPT OR Claude OR Gemini OR (large AND language AND model) OR LLM)
-      AND ((unstructured AND text) OR (unstructured AND data) OR (clinical AND text)
-      OR (medical AND text) OR (free AND text))
-      AND (structuring OR structurization OR normalization OR standardization OR (data AND transformation))
-      AND (hallucination OR (false AND information) OR (factual AND accuracy) OR (knowledge AND grounding)
-      OR (retrieval AND augmented AND generation) OR RAG OR (fact AND checking) OR (error AND mitigation)
-      OR (reliability AND improvement) OR (accuracy AND enhancement))
-    collection: ai-hallucination-mitigation
-    description: "생성형AI 텍스트 정형화 시 환각현상 극복방법"
-    retmax: 1000
-    enabled: false
-    created_date: "2025-08-09"

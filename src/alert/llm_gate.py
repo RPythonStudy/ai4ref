@@ -16,6 +16,8 @@ from common.features import log
 PROMPT = """너는 진료지침 감시 보조다. 아래 논문이 현행 지침과 *다른 결론/프로토콜*을 제시하는 '랜드마크'인지 판정하라.
 KQ: {kq}
 현행 지침: {guideline}
+대조(C, 참고): {comparison}
+주요 결과(O, 이 결과를 보고하는지 확인): {outcome}
 제목: {title}
 초록: {abstract}
 
@@ -53,6 +55,8 @@ def _claude_cli(paper, kq, model: str = "haiku") -> dict:
     prompt = PROMPT.format(
         kq=kq.get("kq", ""),
         guideline=kq.get("guideline", ""),
+        comparison=kq.get("comparison", "") or "(개방)",
+        outcome=kq.get("outcome", ""),
         title=paper.get("title", ""),
         abstract=(paper.get("abstract", "") or "")[:3000],
     )

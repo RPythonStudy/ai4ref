@@ -4,9 +4,9 @@ from pathlib import Path
 from common.database import get_db_connection
 
 def load_search_collections():
-    cfg_path = Path("config/kq_pico_collection.yml")
+    cfg_path = Path("config/legacy_collections.yml")
     with open(cfg_path, "r", encoding="utf-8") as f:
-        collections = yaml.safe_load(f)["kqs"]
+        collections = yaml.safe_load(f)["collections"]
     conn = get_db_connection()
     cur = conn.cursor()
     for table in ["paper_collection", "collection_pmid", "unique_pmid", "filtered_pmid", "collections"]:
