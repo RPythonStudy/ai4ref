@@ -14,36 +14,45 @@
 
 ## 🔄 새출발 계획 (Spec Kit, 2026-06-21 결정)
 
-**결정**: ai4ref 의 기존 코드는 대부분 cruft(템플릿 fork·collector·Quarto/R). **cruft 버리고 Spec Kit 으로 새출발**하되, *작동·검증된 alert MVP 는 다시 짜지 말고 **포팅(복사)***. (재작성은 검증 8/9·게이트 캘리브레이션을 날리는 오버 → 금지)
+**결정 (2026-06-21 갱신)**: ai4ref 의 기존 코드는 대부분 cruft(템플릿 fork·collector·Quarto/R). **cruft 버리고 Spec Kit 으로 새출발**하며, alert MVP 도 *포팅(복사)이 아니라* **전부 명세-우선으로 신규 재작성**한다.
+> ⚠️ 방침 전환: 이전엔 "MVP 포팅(복사)·재작성 금지"였으나, 프로젝트별 포팅 예외가 누적 인지부하를 키운다는 판단(Dr. Ben)으로 **단일 규율 = 신규 재작성**으로 통일. 재작성의 본래 위험(검증·캘리브레이션 소실)은 코드 보존이 아니라 **검증 자산을 acceptance 참값으로 박제**해 회피한다 → 헌법 XIII.
+> **검증 참값(보존 필수, 재작성 코드가 재현해야 등가)**: `validate_kq` golden PMID(검증 A 8/9·B 2/2), 정련된 PICO OR-리스트(`key_questions.yml`), 게이트 기대판정(RELIEF🎯·토픽-인접 FP 거부).
 
 **백업 완료**: git tag `archive/mvp-pre-speckit`(@039f36c) · `~/projects/ai4ref-archive-2026-06-21.tar.gz` · 원격 `RPythonStudy/ai4ref`.
 
-### PORT (복사할 작동 MVP)
-- `config/{key_questions.yml, features.yml}`
-- `src/notify/` 전체 (base·registry·stdout_sink·telegram_sink·zotero_sink)
-- `src/alert/` (run·llm_gate·validate_kq·classify_qtype)
-- `src/common/` (features·pubmed·query·state)
-- `.env`(시크릿) · `.gitignore` · 이 문서들(HANDOFF·CLAUDE)
+**헌법 초안 준비됨**: `docs/constitution-draft.md` — Spec Kit init 후 `/speckit.constitution` 입력으로 그대로 투입(형식만 v0.11.3 템플릿에 정렬). cortex-kit 헌법(V~XII·부가) 흡수 + 본 §불변 설계 결정 1~10.
 
-### EXTRACT (작은 리팩터)
-- `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import → **`common/zotero.py` 로 추출**(collector 폐기 후에도 동작). import 경로 수정.
-- 로거: `features.py` 가 fail-soft 로 `common.logger` 시도 → 없으면 stderr 폴백. 일단 폴백 유지(logger.py·logging.yml 포팅 보류).
+### REBUILD (명세-우선 신규 재작성 — 기존 코드는 *참조용*, 복사 금지)
+아래는 재작성 **범위**(기능 단위)다. 기존 파일을 그대로 옮기지 말고, `_spec.md` 먼저 → 구현 → 검증 참값 통과 순으로 새로 짠다.
+- config: `key_questions.yml`(PICO OR-블록·두-검증 = 검증 참값) · `features.yml`(토글) — *값은 참값으로 보존, 스키마는 재정의 가능*
+- `notify/` (base·registry·stdout·telegram·zotero sink) — Sink 플러그 모양(헌법 VIII·XII 의 유일 허용 상속)
+- `alert/` (run·llm_gate·validate_kq·classify_qtype) — 결정론 backbone + 게이트 2단계
+- `common/` (features·pubmed·query·state)
+- `.env`(시크릿)·`.gitignore`·이 문서들(HANDOFF·CLAUDE·constitution-draft) = 그대로 이어씀
+
+### 재작성 시 합칠 것 (기존의 부채를 신규에 반영)
+- zotero 헬퍼: 기존엔 `zotero_sink` 가 `collector.zotero_add` 의 `fetch_meta`·`to_zotero_item` 를 import. 신규는 **`common/zotero.py` 단일 출처**로 작성(헌법 XVI No Duplication, collector 없음 전제).
+- 로거: `pyproject` slim deps 기조 → 표준 `logging` + stderr 폴백으로 단순화(logger.py·logging.yml 재작성 안 함).
 
 ### DISCARD (cruft 전량)
 - 템플릿: `README.md`(rpy-quarto-template fork)·`_quarto.yml`·`index.qmd`·`posts/`·`wiki/`·`styles/`·`templates/`·`references/`·`utterances.html`·`ai4ref.Rproj`·`renv.lock`
 - R 트랙: `src/R/`·`src/Rlib/`·`src/preprocessor/`·`src/summerizer/`
-- collector 파이프라인: `src/collector/*`(zotero 함수 추출 후), `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml, legacy_collections.yml}`
+- collector 파이프라인: `src/collector/*`(zotero 로직은 `common/zotero.py` 로 신규 재작성), `src/database/*`, `common/database.py`, `config/{postgres.yml, logging.yml, legacy_collections.yml}`
 - 오케스트레이션: `Makefile`·`Makefile_project`·`scripts/`
 - 패키징: `requirements.txt`(flat freeze) → **`pyproject.toml`(uv·src layout·slim deps: pyyaml·python-dotenv·requests·pyzotero)**
 
 ### Spec Kit 실행 순서 (fresh ai4ref 세션에서)
 ```
-1. 백업 확인 (위) → cruft DISCARD + zotero EXTRACT + pyproject.toml 작성
-2. uvx --from git+https://github.com/github/spec-kit.git specify init --here --ai claude
-3. /speckit.constitution  — §불변 설계 결정(아래)을 헌법으로 박제
-4. /speckit.specify "현행 alert 감시 파이프라인" — 포팅한 MVP retro-spec(기존 동작 문서화)
+0. 검증 참값 추출·고정: validate_kq golden PMID, key_questions.yml 의 PICO OR-리스트,
+   게이트 기대판정(RELIEF🎯·FP 거부)을 acceptance 참값 파일로 박제 (재작성 등가 판정 기준)
+1. 백업 확인 (위) → cruft DISCARD + pyproject.toml 작성
+2. uvx --from git+https://github.com/github/spec-kit.git@v0.11.3 specify init --here --ai claude
+   ⚠️ 버전 고정 필수. 무고정(@없음)은 main HEAD(미릴리스)를 끌어옴. 최신 릴리스 = v0.11.3(2026-06-19).
+   (cortex 는 v0.4.1 로 init 됨 → 템플릿 골격 다름. ai4ref 는 v0.11.3 기준으로 통일)
+3. /speckit.constitution  — docs/constitution-draft.md 내용 투입(v0.11.3 템플릿 형식에 정렬)
+4. /speckit.specify — 현행 alert 감시 파이프라인 retro-spec(기존 동작 = 검증 참값을 명세로)
 5. /speckit.specify — KQ 추출 add-on(지침→PICO→검증A 정련→토글) 부터 신규
-6. 포팅 무손상 확인: validate_kq → 8/9·2/2 / 게이트 → RELIEF 🎯·FP 거부
+6. 검증 참값 재현 확인(등가 판정): validate_kq → 8/9·2/2 / 게이트 → RELIEF 🎯·FP 거부
 ```
 > **OpenSpec 은 ai4ref 엔 불필요**(유지할 브라운필드 없음). Dr. Ben 의 *살아있는 다른 프로젝트*(radsafety-pwa 등) 유지보수엔 OpenSpec. (조사 근거: vault `03_resources/AI-agents/2026-06-21_딥리서치_SDD-1인개발자-유지보수전략.md`)
 
