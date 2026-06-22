@@ -35,45 +35,10 @@ kqs:
 
   - kq: "주요 복부수술 환자에서 수술전후 수액 전략의 효과"
     question_type: intervention
-    design_strictness: loose     # strict = 기대설계(RCT) 수준 요구 / loose = recall 우선(기본)
-    pico:
-      P:                              # 대상: 주요 복부(대장) 수술 — OR 블록
-        - surgery[tiab]
-        - surgical[tiab]
-        - perioperative[tiab]
-        - abdominal[tiab]
-        - '"Surgical Procedures, Operative"[Mesh]'
-      I:                              # 중재: 수술전후 수액 전략 — OR 블록 (시드 역공학 + 정련)
-        - '"Fluid Therapy"[Mesh]'
-        - fluid therapy[tiab]
-        - fluid management[tiab]
-        - fluid balance[tiab]
-        - fluid responsiveness[tiab]
-        - goal-directed[tiab]
-        - '"goal directed"[tiab]'
-        - '"intravascular volume"[tiab]'   # v2→v3 정련 때 추가
-        - '"central venous"[tiab]'         # v2→v3 정련 때 추가
-      C: "대조: liberal / standard fluid (개방 — 검색식 제외)"
-      O: "결과: 합병증 · AKI · LOS (색인 누락 위험 → 검색식 제외, 게이트서 판정)"
     guideline:
       name: "ERAS 2012 elective colonic surgery — 수술전후 수액 관리 권고"
       pmid: "23099039"        # Gustafsson 2012, Clin Nutr
       date: "2012-12"         # T (제정 시점)
-    # 검증 A (T 이전): recall 8/9 (2026-06-20). 정련된 OR 블록이 지침 근거를 재현.
-    guideline_refs:
-      - "20515521"   # Varadhan/Lobo — IV fluid 메타분석
-      - "19519723"   # Bundgaard — liberal vs restrictive
-      - "19837807"   # Giglio — goal-directed 혈역학 메타
-      - "19934912"   # Senagore — 복강경 colectomy GDT RCT
-      - "19602972"   # Marik — arterial waveform (ICU; 간접근거 → 검색 한계 누락, 정직한 천장)
-      - "21173294"   # Futier — goal-directed vs restrictive RCT
-      - "16356220"   # Pearse — central venous saturation
-      - "14739801"   # Holte — epidural·intravascular volume
-      - "19302633"   # Soni — GIFTASUP 합의
-    # 검증 B (T 이후): 포착 2/2 (2026-06-20).
-    post_guideline_landmarks:
-      - "29742967"   # RELIEF (Myles, NEJM 2018) — near-zero 권고 뒤집음
-      - "24842135"   # OPTIMISE (Pearse, JAMA 2014) — goal-directed, major GI surgery
     collection: eras-fluid-abdominal
     enabled: true
     created_date: "2026-06-20"
