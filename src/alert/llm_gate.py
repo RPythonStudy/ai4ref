@@ -11,7 +11,7 @@ backend:
   ② 랜드마크 — 지침과 다른 결론·프로토콜의 practice-changing 인가
               (strict = 기대 설계 수준 요구 / loose = recall 편향)
 
-judge() -> {"relevant": bool, "is_landmark": bool, "reason": str}
+judge() -> {"is_relevant": bool, "is_landmark": bool, "reason": str}
 """
 import json
 import subprocess
@@ -41,15 +41,15 @@ PROMPT = """너는 진료지침 감시 보조다. 아래 논문을 2단계로 �
 
 판정 단계:
 ① 관련성 — 이 논문이 KQ 의 **대상(P)과 중재(I)를 둘 다** 직접 다루는가?
-   · 한쪽만 맞으면 relevant=false. (대상은 맞으나 다른 중재 / 중재는 맞으나 다른 대상)
+   · 한쪽만 맞으면 is_relevant=false. (대상은 맞으나 다른 중재 / 중재는 맞으나 다른 대상)
    · 예: KQ='복부수술의 수액전략' 인데 논문이 '신장이식의 수액전략'(대상 불일치) 이거나
-        '복부수술의 로봇 vs 복강경'(중재 불일치) 이면 relevant=false.
-② 랜드마크 — (relevant 일 때만) 현행 지침과 *다른 결론·프로토콜* 을 제시하는 practice-changing 인가?
+        '복부수술의 로봇 vs 복강경'(중재 불일치) 이면 is_relevant=false.
+② 랜드마크 — (is_relevant 일 때만) 현행 지침과 *다른 결론·프로토콜* 을 제시하는 practice-changing 인가?
    · strict: 기대 설계({design}) 수준의 근거여야 is_landmark=true. 그 외 false.
    · loose: 설계 무관, 경계선이면 포함 (recall 편향 — 놓침이 가장 비싼 오류).
 
 JSON 으로만 답하라:
-{{"relevant": true/false, "is_landmark": true/false, "reason": "한 줄 근거(한국어)"}}"""
+{{"is_relevant": true/false, "is_landmark": true/false, "reason": "한 줄 근거(한국어)"}}"""
 
 
 def judge(paper: dict, kq: dict, backend: str = "stub") -> dict:
@@ -63,7 +63,7 @@ def judge(paper: dict, kq: dict, backend: str = "stub") -> dict:
 def _stub(paper, kq) -> dict:
     # 골격 검증용: 통과시키고 데모 사유 부여. 실판정은 claude_cli 연결 후.
     return {
-        "relevant": True,
+        "is_relevant": True,
         "is_landmark": True,
         "reason": "[stub] 실제 판정은 llm_backend=claude_cli 연결 후",
     }
@@ -100,13 +100,13 @@ def _claude_cli(paper, kq, model: str = "haiku") -> dict:
         if not data:
             raise RuntimeError(f"판정 JSON 파싱 실패: {raw[:160]}")
         return {
-            "relevant": bool(data.get("relevant")),
+            "is_relevant": bool(data.get("is_relevant")),
             "is_landmark": bool(data.get("is_landmark")),
             "reason": str(data.get("reason", "")),
         }
     except Exception as e:
         log.error(f"[llm_gate:claude_cli] 실패 → 보수적 보류: {e}")
-        return {"relevant": False, "is_landmark": False, "reason": f"판정 실패: {e}"}
+        return {"is_relevant": False, "is_landmark": False, "reason": f"판정 실패: {e}"}
 
 
 def _extract_json(txt: str) -> dict:
