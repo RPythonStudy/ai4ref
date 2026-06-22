@@ -41,6 +41,6 @@ uv run python -m alert.validate_kq                     # 두-검증 8/9 · 2/2
 자동화: `scripts/auto-implement.sh <tasks.md>` 가 tasks.md 미완료 묶음을 위 원칙대로 구현→이슈 연결·종료까지 무인 반복(`--dangerously-skip-permissions`). 첫 실행은 지켜볼 것.
 
 <!-- SPECKIT START -->
-현재 작업 계획: `specs/001-kq-pico-authoring/plan.md` (L2 첫 피처 — KQ·PICO 정의 retro-spec).
-기술 컨텍스트·구조·산출물(research·data-model·contracts·quickstart)은 해당 plan 참조.
+현재 작업 계획: `specs/006-llm-relevance-landmark-gate/plan.md` (§006 LLM 게이트 retro-spec —
+관련성·랜드마크 2단계 precision). 완료: 001·003·004·005. 기술 컨텍스트·구조·등가기준은 해당 plan 참조.
 <!-- SPECKIT END -->
