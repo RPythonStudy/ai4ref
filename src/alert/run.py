@@ -24,6 +24,7 @@ from common.features import load_features, is_enabled, log, project_root   # noq
 from common.state import SeenStore                                  # noqa: E402
 from common.pubmed import esearch, efetch_meta                      # noqa: E402
 from common.query import build_query                                # noqa: E402
+from common.kq import load_kqs, effective_design_strictness          # noqa: E402
 from notify.base import LandmarkItem                                # noqa: E402
 from notify.registry import build_sinks, fan_out                    # noqa: E402
 from alert.llm_gate import judge                                    # noqa: E402
@@ -40,22 +41,14 @@ def _demo_candidates() -> list:
     ]
 
 
-def _load_kqs() -> list:
-    """key_questions.yml 에서 감시 대상 KQ(enabled + term + guideline)만."""
-    path = project_root() / "config" / "key_questions.yml"
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    out = []
-    for r in data.get("kqs", []):
-        if r.get("enabled") and r.get("pico") and r.get("guideline"):
-            out.append(r)
-    return out
+# _load_kqs() was removed and replaced by common.kq.load_kqs()
 
 
 def _collect_candidates(features, reldate: int = 30, limit: int = None) -> list:
     """PubMed 증분 검색 → efetch(제목·초록) → 후보 LandmarkItem 목록."""
-    kqs = _load_kqs()
+    kqs = load_kqs(only_enabled=True)
     if not kqs:
-        log.warning("[collect] 감시 KQ 없음 (key_questions.yml: enabled+term+guideline 필요)")
+        log.warning("[collect] 감시 KQ 없음 (key_questions.yml 에 활성화된 KQ 필요)")
         return []
     items = []
     for kq in kqs:
@@ -111,7 +104,7 @@ def run(demo: bool = False, collect_only: bool = False,
 
     # KQ → 게이트 컨텍스트 (지침 라벨 · C·O 필터 · 유형 · 엄격도)
     ctx_map = {}
-    for kq in _load_kqs():
+    for kq in load_kqs(only_enabled=True):
         g = kq.get("guideline", {})
         pico = kq.get("pico", {})
         ctx_map[kq["kq"]] = {
@@ -120,7 +113,7 @@ def run(demo: bool = False, collect_only: bool = False,
             "comparison": pico.get("C", ""),
             "outcome": pico.get("O", ""),
             "question_type": kq.get("question_type", ""),
-            "strictness": kq.get("design_strictness", "loose"),
+            "strictness": effective_design_strictness(kq),
         }
 
     candidates = _demo_candidates() if demo else _collect_candidates(features, reldate=reldate, limit=limit)
